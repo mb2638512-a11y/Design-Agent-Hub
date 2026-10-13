@@ -17,7 +17,7 @@ The interactive API docs are at `http://127.0.0.1:8000/docs`.
 2. For personal/local testing, create an appropriately scoped token; for multi-user integrations, prefer OAuth.
 3. Store the token in a local `.env` file or secret manager as `FIGMA_ACCESS_TOKEN`.
 4. Use `GET /connectors/status` to check configuration presence, then test only with a file you are authorized to access.
-5. The adapter currently exposes file retrieval and node-image export URL retrieval. Export URLs are provider-generated; downloading them is a separate step.
+5. The REST adapter exposes file retrieval and node-image export URL retrieval. Export URLs are provider-generated; downloading them is a separate step. For creating editable layers, import the local plugin in `figma-plugin/` using **Plugins → Development → Import plugin from manifest…**. Generate a spec with `POST /figma/plugin-spec` or MCP `figma_create_plugin_spec`, paste it into the plugin UI, review, and run it. This avoids claiming that the Figma REST API can arbitrarily write design nodes.
 
 ## 3. Connect Canva
 
@@ -38,6 +38,8 @@ Run `python -m design_agent_hub.mcp_server` using the MCP client’s supported s
 - `list_design_categories`
 - `search_design_jobs`
 - `plan_design_workflow`
+- `figma_create_plugin_spec`
+- `canva_create_autofill_job` and `canva_get_autofill_job`
 
 Tools cover catalog/search/planning, authorized Figma file reads and node-image exports, Canva design listing, Canva blank-design creation, and Canva export jobs. Write tools require `user_approved=true`. MCP stdio should be launched only by trusted local agent clients; do not expose it to untrusted callers.
 
@@ -48,6 +50,9 @@ Tools cover catalog/search/planning, authorized Figma file reads and node-image 
 - `GET /catalog/search?q=thumbnail`
 - `POST /plan`
 - `GET /connectors/status`
+- `POST /figma/plugin-spec` with design title, headline, subheading, dimensions, and colors
+- `POST /connectors/canva/autofills` with `brand_template_id`, `data`, optional `title`, and `user_approved: true`
+- `GET /connectors/canva/autofills/{job_id}`
 - `GET /connectors/figma/files/{file_key}`
 - `POST /connectors/figma/export` with `file_key`, `node_ids`, `image_format`
 - `POST /connectors/canva/designs` with `title`, `width`, `height`, `user_approved: true`
