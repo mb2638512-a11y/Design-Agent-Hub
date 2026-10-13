@@ -159,6 +159,27 @@ class MainManagerAgent:
         except Exception as exc:  # noqa: BLE001 - memory must never take down task execution
             return {"enabled": True, "stored": False, "reason": f"memory_unavailable:{type(exc).__name__}"}
 
+    @staticmethod
+    def _repair_output(agent: SpecialistAgent, output: object) -> tuple[object, dict[str, object]]:
+        """Apply a minimal safe repair to structurally incomplete object results."""
+        validation = MainManagerAgent._validate_output(output)
+        if validation["valid"] or not isinstance(output, dict):
+            return output, validation
+        repaired = dict(output)
+        changes: list[str] = []
+        if not repaired.get("agent_id"):
+            repaired["agent_id"] = agent.id
+            changes.append("added_missing_agent_id")
+        if not repaired.get("agent_name"):
+            repaired["agent_name"] = agent.name
+            changes.append("added_missing_agent_name")
+        if changes:
+            repaired["manager_repair"] = {"applied": True, "changes": changes, "note": "Metadata repair only; content correctness is not guaranteed."}
+        validation = MainManagerAgent._validate_output(repaired)
+        if changes:
+            validation["repair"] = {"applied": True, "changes": changes}
+        return repaired, validation
+
     async def dispatch(self, task: str) -> dict[str, object]:
         cleaned = " ".join(task.split()) if isinstance(task, str) else ""
         if len(cleaned) < 3:
@@ -180,7 +201,7 @@ class MainManagerAgent:
                     raise
                 failure = self._safe_failure(exc)
                 return {"status": "agent_failed" if failure["status"] == "failed" else "agent_timed_out", "manager": self.name, "task": cleaned, "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score}, "failure": failure, "retry_guidance": "Retry once, simplify the task, or use a different specialist if the problem persists."}
-            validation = self._validate_output(result)
+            result, validation = self._repair_output(primary, result)
             response: dict[str, object] = {
                 "status": "delegated" if validation["valid"] else "agent_invalid_output",
                 "manager": self.name,
@@ -210,7 +231,7 @@ class MainManagerAgent:
             if isinstance(output, BaseException):
                 team_results.append({"agent": {"id": agent.id, "name": agent.name}, **self._safe_failure(output)})
                 continue
-            validation = self._validate_output(output)
+            output, validation = self._repair_output(agent, output)
             team_results.append({"agent": {"id": agent.id, "name": agent.name}, "status": "completed" if validation["valid"] else "invalid_output", "quality_gate": validation, "result": output})
 
         successful = sum(item["status"] == "completed" for item in team_results)
