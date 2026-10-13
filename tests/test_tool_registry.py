@@ -34,3 +34,26 @@ def test_upstream_catalog_sources_are_opt_in_metadata_only():
     assert {source["kind"] for source in sources} == {"mcp", "api"}
     assert all(source["sync_mode"] == "explicit_opt_in_only" for source in sources)
     assert all(source["verified_by_this_project"] is False for source in sources)
+
+
+def test_catalog_sync_normalises_only_metadata_without_execution():
+    from design_agent_hub.catalog_sync import _normalise_source
+
+    records = _normalise_source("mcphq-landscape", [
+        {"id": "sample", "name": "Sample MCP", "description": "A test server", "command": "unsafe"},
+        {"id": "missing-name"},
+        "not-an-object",
+    ])
+    assert len(records) == 1
+    assert records[0]["name"] == "Sample MCP"
+    assert records[0]["execution_status"] == "metadata_only_unverified"
+    assert "command" not in records[0]
+
+
+def test_catalog_sync_rejects_unknown_sources():
+    import asyncio
+    import pytest
+    from design_agent_hub.catalog_sync import sync_catalog_source
+
+    with pytest.raises(ValueError):
+        asyncio.run(sync_catalog_source("https://attacker.invalid/feed.json"))
