@@ -16,7 +16,7 @@ class CanvaConnector:
         self.base_url = (base_url or os.getenv("CANVA_API_BASE_URL", "https://api.canva.com/rest")).rstrip("/")
 
     def status(self) -> ConnectorStatus:
-        capabilities = ["list_designs", "create_design", "start_export", "get_export"] if self.token else []
+        capabilities = ["list_designs", "create_design", "start_export", "get_export", "create_autofill_job", "get_autofill_job"] if self.token else []
         return ConnectorStatus(
             provider="canva",
             configured=bool(self.token),
@@ -34,6 +34,36 @@ class CanvaConnector:
             raise ValueError("limit must be between 1 and 100")
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(f"{self.base_url}/v1/designs", params={"limit": limit}, headers=self._headers())
+            response.raise_for_status()
+            return response.json()
+
+
+    async def create_autofill_job(self, brand_template_id: str, data: dict[str, Any], title: str | None = None) -> dict[str, Any]:
+        """Populate tagged fields in an authorized Canva brand template; requires an eligible Canva plan."""
+        if not brand_template_id.strip():
+            raise ValueError("brand_template_id is required")
+        if not data or len(data) > 100:
+            raise ValueError("data must contain between 1 and 100 template fields")
+        if title is not None and not 1 <= len(title.strip()) <= 255:
+            raise ValueError("title must contain 1-255 characters")
+        payload: dict[str, Any] = {
+            "type": "create_from_brand_template",
+            "brand_template_id": brand_template_id,
+            "data": data,
+        }
+        if title:
+            payload["title"] = title.strip()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(f"{self.base_url}/v1/autofills", headers=self._headers(), json=payload)
+            response.raise_for_status()
+            return response.json()
+
+    async def get_autofill_job(self, job_id: str) -> dict[str, Any]:
+        """Check an asynchronous Canva autofill job and return its design when complete."""
+        if not job_id.strip():
+            raise ValueError("job_id is required")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{self.base_url}/v1/autofills/{job_id}", headers=self._headers())
             response.raise_for_status()
             return response.json()
 
