@@ -109,6 +109,6 @@ async def create_plan(req: PlanRequest) -> DesignPlan:
             content = data["choices"][0]["message"]["content"]
             plan = json.loads(content)
             return DesignPlan(**plan)
-    except Exception:
+    except Exception:  # noqa: BLE001 - deterministic fallback intentionally covers provider/schema errors
         # Never leak provider errors or keys; deterministic fallback keeps the API usable.
         return _fallback_plan(req)
