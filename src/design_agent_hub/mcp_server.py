@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 
 from mcp.server.fastmcp import FastMCP
 
 from .catalog import get_catalog, search_catalog
+from .connectors.canva import CanvaConnector
+from .connectors.figma import FigmaConnector
 from .planner import PlanRequest, create_plan
 
 mcp = FastMCP("design-agent-hub")
@@ -44,6 +45,27 @@ async def plan_design_workflow(
         )
     )
     return plan.model_dump_json(indent=2)
+
+
+@mcp.tool()
+async def figma_get_file(file_key: str) -> str:
+    """Read a Figma file the configured credential is authorized to access."""
+    result = await FigmaConnector().get_file(file_key)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@mcp.tool()
+async def figma_export_node_images(file_key: str, node_ids: list[str], image_format: str = "png") -> str:
+    """Request image export URLs for selected nodes in an authorized Figma file."""
+    result = await FigmaConnector().export_node_images(file_key, node_ids, image_format)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@mcp.tool()
+async def canva_list_designs(limit: int = 20) -> str:
+    """List Canva designs available to the configured OAuth credential."""
+    result = await CanvaConnector().list_designs(limit)
+    return json.dumps(result, ensure_ascii=False)
 
 
 if __name__ == "__main__":
