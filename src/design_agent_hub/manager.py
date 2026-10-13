@@ -11,6 +11,7 @@ from .agents.delivery_agent import DeliverySpecialistAgent
 from .agents.design_agent import DesignSpecialistAgent
 from .agents.quality_agent import QualitySpecialistAgent
 from .agents.research_agent import ResearchSpecialistAgent
+from .agents.social_media_agent import SocialMediaSpecialistAgent
 
 
 class AgentRegistry:
@@ -75,6 +76,7 @@ class MainManagerAgent:
                 CodingSpecialistAgent(),
                 ContentSpecialistAgent(),
                 ResearchSpecialistAgent(),
+                SocialMediaSpecialistAgent(),
                 QualitySpecialistAgent(),
                 DeliverySpecialistAgent(),
             ]
