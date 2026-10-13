@@ -33,7 +33,7 @@ Human / automation / compatible AI client
  SVG draft               workflow              manifest
 ```
 
-Routing uses deterministic capability scoring rather than unconstrained autonomous reasoning. The manager now creates an explicit task plan, assigns up to three domain specialists plus Quality and Delivery for complex work, enforces per-agent timeouts, validates result structure, applies a narrow metadata-only self-repair, and preserves partial successes. Structural QA does not prove factual accuracy or visual quality. An optional local SQLite memory stores compact task summaries only when explicitly enabled. The planner can use a configured primary OpenAI-compatible model, then an optional fallback model, then deterministic planning.
+Routing uses deterministic capability scoring rather than unconstrained autonomous reasoning. The manager now creates an explicit task plan, assigns up to three domain specialists for complex work, runs QA against their actual returned results, then prepares a delivery handoff, enforces per-agent timeouts, validates result structure, applies a narrow metadata-only self-repair, and preserves partial successes. Structural QA does not prove factual accuracy or visual quality. An optional local SQLite memory stores compact task summaries only when explicitly enabled. The planner can use a configured primary OpenAI-compatible model, then an optional fallback model, then deterministic planning.
 
 ## MCP first — no frontend
 
