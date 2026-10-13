@@ -28,6 +28,13 @@ class CanvaCreateRequest(BaseModel):
     user_approved: bool = False
 
 
+class CanvaAutofillRequest(BaseModel):
+    brand_template_id: str = Field(min_length=1, max_length=256)
+    data: dict[str, object] = Field(min_length=1, max_length=100)
+    title: str | None = Field(default=None, max_length=255)
+    user_approved: bool = False
+
+
 class CanvaExportRequest(BaseModel):
     design_id: str = Field(min_length=1, max_length=256)
     file_format: str = "png"
@@ -121,6 +128,30 @@ async def canva_export(request: CanvaExportRequest) -> dict[str, object]:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Canva export request failed; check OAuth scopes, design access, and rate limits.") from exc
+
+
+@app.post("/connectors/canva/autofills", dependencies=[Depends(require_api_token)])
+async def canva_autofill(request: CanvaAutofillRequest) -> dict[str, object]:
+    if not request.user_approved:
+        raise HTTPException(status_code=409, detail="Set user_approved=true only after the user explicitly confirms creating a design from this template.")
+    try:
+        return await CanvaConnector().create_autofill_job(request.brand_template_id, request.data, request.title)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Canva autofill request failed; verify template fields, plan eligibility, OAuth scopes, and rate limits.") from exc
+
+
+@app.get("/connectors/canva/autofills/{job_id}", dependencies=[Depends(require_api_token)])
+async def canva_get_autofill(job_id: str) -> dict[str, object]:
+    try:
+        return await CanvaConnector().get_autofill_job(job_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Canva autofill status request failed; check job ID and access permissions.") from exc
 
 
 @app.get("/connectors/canva/exports/{export_id}", dependencies=[Depends(require_api_token)])
