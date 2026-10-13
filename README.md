@@ -110,3 +110,12 @@ The current registry contains **12 MCP reference entries**, **12 API/library ref
 **Important distinction:** the directories are curated references; third-party repositories have not been cloned or installed into this project, and integrations marked `reference_only` are not connected. The existing Canva and Figma adapters are only partially integrated and need credentials, correct scopes, and end-to-end verification. “No external API key” also does not mean “no MCP”: built-ins can be called through this project's REST API without an MCP client, while an MCP-compatible client uses the MCP server. Public third-party APIs still require network access and can impose rate limits.
 
 Run `pytest -q` to verify the catalog tests after installing the development dependencies.
+
+
+## Large catalogs and optional gateway
+
+For large-scale discovery, see [gateway and catalog strategy](integrations/gateway/README.md), [upstream source metadata](integrations/catalog-sources.json), [MCP references](integrations/mcp/README.md), and [API references](integrations/api/README.md). The MCP server exposes `list_upstream_catalog_sources()`; the authenticated REST API exposes `GET /tools/catalog/sources`. These endpoints only list upstream feed URLs; they do not download, clone, install, or execute external code.
+
+Two useful optional upstream directories are the curated MCPHQ JSON catalog and the APIs.guru OpenAPI directory. They are discovery sources, not a list of verified working integrations. The recommended scale strategy is **discover metadata → filter → license/security review → install one connector in isolation → smoke-test → mark verified → expose to the Manager**.
+
+A gateway such as [MetaMCP](https://github.com/metatool-ai/metamcp) or a smaller stdio aggregator can unify selected MCP servers. It is an optional separate service, not automatically deployed by this repository. Do not expose a public gateway without authentication, allowlists, secret isolation, rate limits, and reviewed tool permissions.
