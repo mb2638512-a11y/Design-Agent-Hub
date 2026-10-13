@@ -25,9 +25,9 @@ def test_manager_registers_specialists_by_default():
     manager = MainManagerAgent()
     status = manager.status()
     assert status["manager_id"] == "manager"
-    assert status["registered_agent_count"] == 6
+    assert status["registered_agent_count"] == 7
     assert {item["id"] for item in status["agents"]} == {
-        "design", "coding", "content", "research", "quality", "delivery"
+        "design", "coding", "content", "research", "social_media", "quality", "delivery"
     }
 
 
@@ -93,3 +93,16 @@ def test_manager_returns_html_starter_for_landing_page():
     assert asset["format"] == "html"
     assert "<!doctype html>" in asset["content"].lower()
     assert "viewport" in asset["content"]
+
+
+
+def test_manager_routes_social_media_account_workflow():
+    task = "Manage my social media accounts across Facebook Pages and YouTube channels end-to-end"
+    result = asyncio.run(MainManagerAgent().dispatch(task))
+    assert result["status"] == "delegated"
+    assert result["selected_agent"]["id"] == "social_media"
+    assert result["result"]["result_type"] == "social_media_operations_plan"
+    assert result["result"]["execution_status"] == "plan_only_accounts_not_changed"
+    assert "Facebook Pages" in result["result"]["target_platforms"]
+    assert "YouTube" in result["result"]["target_platforms"]
+    assert result["result"]["approval_gates"]
