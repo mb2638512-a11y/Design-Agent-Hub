@@ -24,7 +24,7 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
-from .tool_registry import list_tool_catalog, search_tool_catalog
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
 
 app = FastAPI(
     title="Design Agent Hub",
@@ -376,3 +376,10 @@ async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, obj
     if kind and kind not in {"builtin", "mcp", "api"}:
         raise HTTPException(status_code=422, detail="kind must be builtin, mcp, or api")
     return {"query": q, "kind": kind or "all", "matches": search_tool_catalog(q, kind)}
+
+
+
+@app.get("/tools/catalog/sources", dependencies=[Depends(require_api_token)])
+async def tools_catalog_sources() -> dict[str, object]:
+    """List optional upstream MCP/API metadata feeds without fetching them."""
+    return {"sources": list_catalog_sources(), "fetches_external_data": False}
