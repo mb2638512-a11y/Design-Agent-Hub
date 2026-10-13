@@ -9,6 +9,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from .catalog import CATALOG, search_catalog
+from .provider_router import recommend_tools
 
 
 class PlanRequest(BaseModel):
@@ -36,12 +37,9 @@ def _fallback_plan(req: PlanRequest) -> DesignPlan:
     categories = [str(item["name"]) for item in matches[:3]]
     if not categories:
         categories = ["Product UI/UX", "Quality assurance and delivery"]
-    tools = ["Design Agent Hub"]
-    request_lower = req.request.lower()
-    if any(word in request_lower for word in ("figma", "wireframe", "prototype", "ui", "ux", "dashboard", "app")):
-        tools.append("Figma (when authorized)")
-    if any(word in request_lower for word in ("canva", "thumbnail", "social", "poster", "presentation", "flyer", "ebook", "banner")):
-        tools.append("Canva (when authorized)")
+    routing = recommend_tools(req.request)
+    tools = [str(item["name"]) for item in routing["candidates"][:3]]
+    tools.insert(0, "Design Agent Hub")
     steps = [
         "Clarify the goal, audience, deliverable, dimensions, and success criteria.",
         "Choose a matching category and prepare a structured design brief.",
