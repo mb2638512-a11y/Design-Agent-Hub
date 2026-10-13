@@ -2,7 +2,7 @@
 
 A provider-agnostic design workflow agent for UI/UX, brand and graphic design, content production, and agent-to-agent automation. It is designed to connect to **official Canva and Figma APIs** where the account, scopes, and plan permit, and expose reusable capabilities through a REST API and MCP tools.
 
-> **Status: foundation / early development.** The planner, task catalog, API, and MCP tool surface are scaffolded. Live Canva/Figma operations require your own developer apps and OAuth/access credentials. This repository does not bypass product restrictions, create designs in the background without authorization, or claim every task is automatable.
+> **Status: early MVP.** The REST API, design catalog, planner, MCP tools, provider adapters, and CI tests are implemented. Live provider actions still require your own valid credentials, scopes, and an end-to-end test against your Canva/Figma accounts. This repository does not bypass product restrictions or claim every task is automatable.
 
 ## What it covers
 
@@ -44,7 +44,7 @@ cp .env.example .env
 uvicorn design_agent_hub.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` for interactive API docs.
+Open `http://127.0.0.1:8000/docs` for interactive API docs. For a production deployment, set `APP_ENV=production` and a strong `API_BEARER_TOKEN` before exposing the service.
 
 ### Example request
 
