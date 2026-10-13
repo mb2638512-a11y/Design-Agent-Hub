@@ -22,15 +22,15 @@ The catalog is a workflow map, not a claim that Canva or Figma can natively gene
 Human / AI agent / automation
         | REST API or MCP (stdio)
         v
-Design Agent Hub
-  ├─ Task catalog + request planner
-  ├─ Provider-neutral model adapter (optional OpenAI-compatible endpoint)
-  ├─ Policy / confirmation boundary
-  └─ Provider adapters
-       ├─ Penpot official MCP server (connected design file)
-       ├─ Figma REST API + local Figma plugin
-       ├─ Canva Connect API / MCP (plan-dependent features)
-       └─ Free-first provider router + HTML/CSS/SVG fallback
+Main Manager Agent
+  └─ Agent Registry / Dispatcher
+       └─ Design Agent (first specialist)
+            ├─ 20 design categories / 152 job examples
+            ├─ Planner + free-first provider router
+            └─ Penpot MCP / Figma adapter + plugin / Canva adapter
+
+Future specialists can register through the same SpecialistAgent contract.
+The manager chooses a matching registered agent and returns its result.
 ```
 
 ## Quick start
@@ -83,6 +83,13 @@ Once Canva OAuth is configured and you have an eligible plan plus a brand templa
 ```
 
 The API returns an asynchronous job ID. Poll `GET /connectors/canva/autofills/{job_id}` until the job is `success` or `failed`, then export the created design if needed. Canva autofill may require a Pro, Teams, or Enterprise plan and correct scopes.
+
+### Main manager agent
+
+- `GET /agents` lists the manager and registered specialists.
+- `POST /manager/dispatch` accepts `{"task":"Create an Instagram post design"}` and delegates to the best matching registered agent.
+- MCP clients can use `list_registered_agents` and `manager_dispatch_task`.
+- The first registered specialist is `Design Agent`. It currently returns a plan/specification, not a promise of fully autonomous asset creation. Add future specialists by implementing the `SpecialistAgent` contract and registering them in `src/design_agent_hub/manager.py`.
 
 ### MCP server
 
