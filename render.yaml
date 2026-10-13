@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: design-agent-hub-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: API_BEARER_TOKEN
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://mb2638512-a11y.github.io
