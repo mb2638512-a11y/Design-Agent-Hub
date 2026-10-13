@@ -81,6 +81,12 @@ Never commit `.env`, access tokens, OAuth client secrets, customer assets, or pr
 - Treat model output as a proposal; validate API responses and review final deliverables.
 - Do not send credentials or private designs to a model unless the user has explicitly configured that behavior.
 
+## Docker Compose
+
+1. Copy `.env.example` to `.env` and set a strong `API_BEARER_TOKEN`.
+2. Run `docker compose up --build -d`.
+3. The service is bound to `127.0.0.1:8000` by default. Keep it local until you have configured authentication, TLS, rate limiting, and deployment hardening.
+
 ## Figma editable design plugin
 
 1. Open the `figma-plugin/` folder from this repository on your computer.
