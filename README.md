@@ -1,4 +1,6 @@
-# Design Agent Hub
+# NOVA — Networked Orchestration & Visual Automation
+
+**NOVA** is the name of the Main Manager Agent. The repository/package remains Design Agent Hub for compatibility.
 
 A **frontend-free MCP server** that gives compatible AI agents extra tools for design workflows, coding plans, research, social-platform planning, QA, and delivery. MCP is the primary interface; an optional REST API is also available.
 
