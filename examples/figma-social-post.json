@@ -1,0 +1,57 @@
+{
+  "frames": [
+    {
+      "name": "Social Post - Sample",
+      "width": 1080,
+      "height": 1080,
+      "background": "#F8FAFC",
+      "elements": [
+        {
+          "type": "text",
+          "name": "Brand label",
+          "text": "DESIGN AGENT HUB",
+          "x": 72,
+          "y": 80,
+          "width": 900,
+          "height": 36,
+          "fontSize": 20,
+          "weight": "medium",
+          "color": "#2563EB"
+        },
+        {
+          "type": "text",
+          "name": "Headline",
+          "text": "Ideas into editable designs",
+          "x": 72,
+          "y": 180,
+          "width": 900,
+          "height": 180,
+          "fontSize": 64,
+          "weight": "medium",
+          "color": "#0F172A"
+        },
+        {
+          "type": "rect",
+          "name": "Accent bar",
+          "x": 72,
+          "y": 400,
+          "width": 150,
+          "height": 12,
+          "color": "#2563EB",
+          "radius": 6
+        },
+        {
+          "type": "text",
+          "name": "Subheading",
+          "text": "Build, review, and refine with your workflow agent.",
+          "x": 72,
+          "y": 450,
+          "width": 900,
+          "height": 100,
+          "fontSize": 28,
+          "color": "#475569"
+        }
+      ]
+    }
+  ]
+}
