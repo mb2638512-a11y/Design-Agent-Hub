@@ -10,6 +10,7 @@ from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .planner import PlanRequest, create_plan
+from .figma_spec import FigmaSpecRequest, build_figma_spec
 
 mcp = FastMCP("design-agent-hub")
 
@@ -46,6 +47,33 @@ async def plan_design_workflow(
     )
     return plan.model_dump_json(indent=2)
 
+
+
+@mcp.tool()
+def figma_create_plugin_spec(
+    title: str = "Design Agent Hub",
+    headline: str = "Ideas into editable designs",
+    subheading: str = "Build, review, and refine with your workflow agent.",
+    width: int = 1080,
+    height: int = 1080,
+    background: str = "#F8FAFC",
+    accent: str = "#2563EB",
+    foreground: str = "#0F172A",
+    secondary: str = "#475569",
+) -> str:
+    """Generate a JSON spec for editable Figma layers. Paste the result into the local Figma plugin; no file is changed yet."""
+    request = FigmaSpecRequest(
+        title=title,
+        headline=headline,
+        subheading=subheading,
+        width=width,
+        height=height,
+        background=background,
+        accent=accent,
+        foreground=foreground,
+        secondary=secondary,
+    )
+    return json.dumps(build_figma_spec(request), ensure_ascii=False)
 
 @mcp.tool()
 async def figma_get_file(file_key: str) -> str:
