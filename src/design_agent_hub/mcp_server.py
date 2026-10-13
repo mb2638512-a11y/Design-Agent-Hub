@@ -15,7 +15,7 @@ from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
 from .task_memory import clear_memory, recent_tasks
-from .tool_registry import list_tool_catalog, search_tool_catalog
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
 
 mcp = FastMCP("design-agent-hub")
 
@@ -186,3 +186,10 @@ def list_tool_hubs(kind: str = "") -> str:
 def search_tool_hubs(query: str, kind: str = "") -> str:
     """Search built-in capabilities and curated MCP/API references by name or purpose."""
     return json.dumps({"query": query, "kind": kind or "all", "matches": search_tool_catalog(query, kind.strip().lower() or None)}, ensure_ascii=False)
+
+
+
+@mcp.tool()
+def list_upstream_catalog_sources() -> str:
+    """List optional external MCP/API metadata catalogs. This does not fetch, install, or verify third-party tools."""
+    return json.dumps(list_catalog_sources(), ensure_ascii=False)
