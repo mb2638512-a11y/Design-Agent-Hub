@@ -138,3 +138,21 @@ def test_manager_reports_specialist_timeout_without_hanging():
     assert result["status"] == "agent_timed_out"
     assert result["failure"]["status"] == "timed_out"
     assert result["selected_agent"]["id"] == "slow"
+
+
+def test_manager_builds_explicit_task_plan_for_cross_domain_work():
+    manager = MainManagerAgent()
+    ranked = [(score, agent) for score, agent in manager.registry.rank("Research competitors and build a website") if score > 0]
+    plan = manager.build_task_plan("Research competitors and build a website, then test it", ranked)
+    assert plan["mode"] == "multi_agent"
+    assert plan["external_actions_authorized"] is False
+    assert any(item["agent_id"] == "quality" for item in plan["assignments"])
+
+
+def test_manager_repairs_missing_result_identity_without_claiming_semantic_qa():
+    agent = FakeAgent()
+    repaired, validation = MainManagerAgent._repair_output(agent, {"result": "useful output"})
+    assert repaired["agent_id"] == "fake"
+    assert repaired["manager_repair"]["applied"] is True
+    assert validation["valid"] is True
+    assert validation["repair"]["applied"] is True
