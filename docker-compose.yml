@@ -1,0 +1,12 @@
+services:
+  design-agent-hub:
+    build: .
+    container_name: design-agent-hub
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      API_BEARER_TOKEN: ${API_BEARER_TOKEN:?Set API_BEARER_TOKEN in .env before starting}
+    ports:
+      - "127.0.0.1:8000:8000"
