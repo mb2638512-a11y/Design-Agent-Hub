@@ -193,3 +193,15 @@ def search_tool_hubs(query: str, kind: str = "") -> str:
 def list_upstream_catalog_sources() -> str:
     """List optional external MCP/API metadata catalogs. This does not fetch, install, or verify third-party tools."""
     return json.dumps(list_catalog_sources(), ensure_ascii=False)
+
+
+@mcp.tool()
+async def sync_upstream_catalog(source_id: str) -> str:
+    """Explicitly fetch one allowlisted upstream feed as bounded, unverified metadata only; installs nothing."""
+    try:
+        result = await sync_catalog_source(source_id)
+    except ValueError as exc:
+        return json.dumps({"status": "rejected", "message": str(exc)}, ensure_ascii=False)
+    except RuntimeError as exc:
+        return json.dumps({"status": "upstream_unavailable", "message": str(exc)}, ensure_ascii=False)
+    return json.dumps(result, ensure_ascii=False)
