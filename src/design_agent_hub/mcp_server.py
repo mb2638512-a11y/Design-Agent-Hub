@@ -13,6 +13,7 @@ from .figma_spec import FigmaSpecRequest, build_figma_spec
 from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
+from .social_platforms import list_social_platforms
 
 mcp = FastMCP("design-agent-hub")
 
@@ -27,6 +28,12 @@ def list_registered_agents() -> str:
 async def manager_dispatch_task(task: str) -> str:
     """Ask the main manager to select and delegate to a specialist; no external write is implied."""
     return json.dumps(await main_manager.dispatch(task), ensure_ascii=False)
+
+
+@mcp.tool()
+def list_supported_social_platforms() -> str:
+    """List supported social platforms, workflow capabilities, and integration readiness; this is a catalog, not a live account connection."""
+    return json.dumps(list_social_platforms(), ensure_ascii=False)
 
 
 @mcp.tool()
