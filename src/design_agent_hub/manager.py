@@ -23,11 +23,12 @@ class AgentRegistry:
             self.register(agent)
 
     def register(self, agent: SpecialistAgent) -> None:
-        if not agent.id.strip():
+        agent_id = agent.id.strip()
+        if not agent_id:
             raise ValueError("Agent id must not be empty")
-        if agent.id in self._agents:
-            raise ValueError(f"Agent already registered: {agent.id}")
-        self._agents[agent.id] = agent
+        if agent_id in self._agents:
+            raise ValueError(f"Agent already registered: {agent_id}")
+        self._agents[agent_id] = agent
 
     def list_agents(self) -> list[dict[str, object]]:
         return [
@@ -41,7 +42,11 @@ class AgentRegistry:
         ]
 
     def rank(self, task: str) -> list[tuple[int, SpecialistAgent]]:
-        """Return matching specialists from highest to lowest score."""
+        """Return matching specialists from highest to lowest score.
+
+        Python's stable sort preserves registration order for ties, making routing
+        deterministic and easier to debug.
+        """
         return sorted(
             ((agent.match_score(task), agent) for agent in self._agents.values()),
             key=lambda pair: pair[0],
@@ -59,10 +64,13 @@ class AgentRegistry:
 
 
 class MainManagerAgent:
-    """Routes simple tasks and coordinates specialists for complex requests."""
+    """Routes focused requests and coordinates bounded specialist workflows."""
 
     id = "manager"
     name = "Main Manager Agent"
+    agent_timeout_seconds = 60
+    max_task_characters = 20_000
+    max_domain_specialists = 3
     _complex_markers = (
         "end-to-end", "end to end", "complete package", "full project",
         "from start to finish", "launch the whole", "entire workflow",
@@ -70,6 +78,7 @@ class MainManagerAgent:
         "research and create", "design and build", "create and publish",
         "plan and execute", "audit and fix", "build and test",
     )
+    _multi_step_markers = (",", ";", " and ", " then ", " followed by ")
     _support_agents = ("quality", "delivery")
 
     def __init__(self, registry: AgentRegistry | None = None) -> None:
@@ -92,23 +101,53 @@ class MainManagerAgent:
             "manager_name": self.name,
             "registered_agent_count": len(agents),
             "agents": agents,
-            "routing_mode": "capability_keyword_scoring_with_bounded_collaboration",
+            "routing_mode": "capability_scoring_with_bounded_collaboration",
+            "execution_limits": {
+                "max_task_characters": self.max_task_characters,
+                "agent_timeout_seconds": self.agent_timeout_seconds,
+                "max_domain_specialists": self.max_domain_specialists,
+            },
             "multi_agent_workflows": True,
             "operating_principles": [
-                "Prefer useful progress over unnecessary refusal: complete safe parts and explain only the blocked part.",
-                "For multi-domain tasks, involve the relevant specialists plus quality and delivery review.",
-                "Distinguish plans, generated artifacts, and verified external actions; never claim an action ran unless a tool confirms it.",
-                "Ask for approval only before consequential external writes, publication, deletion, messaging, or spending.",
+                "Complete safe, useful parts instead of refusing an entire mixed request unnecessarily.",
+                "Route focused tasks to the strongest matching specialist; collaborate only for multi-step or cross-domain tasks.",
+                "Use bounded execution so one stalled specialist cannot block the whole workflow indefinitely.",
+                "Distinguish returned plans or artifacts from external actions verified by a connected tool.",
+                "Require authorization for consequential external writes, publication, deletion, messaging, or spending.",
+                "Report partial success and failed specialists clearly; never invent successful execution.",
             ],
         }
 
+    async def _run_with_timeout(self, agent: SpecialistAgent, task: str) -> dict[str, object]:
+        """Run one specialist with a timeout; caller handles and reports failures."""
+        return await asyncio.wait_for(agent.run(task), timeout=self.agent_timeout_seconds)
+
+    @staticmethod
+    def _safe_failure(exc: BaseException) -> dict[str, object]:
+        if isinstance(exc, TimeoutError):
+            return {
+                "status": "timed_out",
+                "error": "Specialist exceeded the manager execution time limit.",
+            }
+        return {
+            "status": "failed",
+            "error": f"{type(exc).__name__}: specialist failed; inspect server logs for details.",
+        }
+
     async def dispatch(self, task: str) -> dict[str, object]:
-        cleaned = task.strip()
+        cleaned = " ".join(task.split()) if isinstance(task, str) else ""
         if len(cleaned) < 3:
             return {
                 "status": "invalid_request",
                 "manager": self.name,
-                "message": "Task must contain at least 3 characters.",
+                "message": "Task must contain at least 3 non-whitespace characters.",
+            }
+        if len(cleaned) > self.max_task_characters:
+            return {
+                "status": "task_too_large",
+                "manager": self.name,
+                "max_task_characters": self.max_task_characters,
+                "message": "Split this request into smaller tasks so specialists can process it reliably.",
             }
 
         ranked = [(score, agent) for score, agent in self.registry.rank(cleaned) if score > 0]
@@ -118,7 +157,7 @@ class MainManagerAgent:
                 "manager": self.name,
                 "task": cleaned,
                 "registered_agents": self.registry.list_agents(),
-                "message": "No specialist currently matches this task. Register a suitable agent to extend coverage.",
+                "message": "No specialist currently matches this task. Try describing the desired outcome and domain, or register a suitable specialist.",
             }
 
         primary_score, primary = ranked[0]
@@ -126,21 +165,26 @@ class MainManagerAgent:
             agent for score, agent in ranked
             if agent.id not in self._support_agents and score > 0
         ]
-        normalized = cleaned.casefold()
-        has_multiple_steps = any(mark in normalized for mark in (",", ";", " and ", " then "))
+        normalized = f" {cleaned.casefold()} "
+        has_multiple_steps = any(mark in normalized for mark in self._multi_step_markers)
         complex_task = any(marker in normalized for marker in self._complex_markers) or (
             len(domain_matches) >= 2 and has_multiple_steps
         )
+
         if not complex_task:
             try:
-                result = await primary.run(cleaned)
-            except Exception as exc:  # noqa: BLE001 - isolate specialist failures from the API
+                result = await self._run_with_timeout(primary, cleaned)
+            except BaseException as exc:
+                if isinstance(exc, (KeyboardInterrupt, SystemExit, asyncio.CancelledError)):
+                    raise
+                failure = self._safe_failure(exc)
                 return {
-                    "status": "agent_failed",
+                    "status": "agent_failed" if failure["status"] == "failed" else "agent_timed_out",
                     "manager": self.name,
                     "task": cleaned,
                     "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
-                    "error": f"{type(exc).__name__}: specialist failed; inspect server logs for details.",
+                    "failure": failure,
+                    "retry_guidance": "Retry once, simplify the task, or use a different specialist if the problem persists.",
                 }
             return {
                 "status": "delegated",
@@ -148,13 +192,14 @@ class MainManagerAgent:
                 "task": cleaned,
                 "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
                 "workflow_mode": "single_specialist",
+                "result_contract": "A returned result is not proof of an external action unless a connected tool confirms it.",
                 "result": result,
             }
 
-        # Keep orchestration bounded: at most three domain specialists plus QA and delivery.
+        # Select only relevant domain specialists, then append review and handoff roles.
         selected: list[SpecialistAgent] = []
         for _, agent in ranked:
-            if agent.id not in self._support_agents and len(selected) < 3:
+            if agent.id not in self._support_agents and len(selected) < self.max_domain_specialists:
                 selected.append(agent)
         for support_id in self._support_agents:
             support = self.registry.get(support_id)
@@ -162,16 +207,16 @@ class MainManagerAgent:
                 selected.append(support)
 
         outputs = await asyncio.gather(
-            *(agent.run(cleaned) for agent in selected),
+            *(self._run_with_timeout(agent, cleaned) for agent in selected),
             return_exceptions=True,
         )
-        team_results = []
+        team_results: list[dict[str, object]] = []
         for agent, output in zip(selected, outputs, strict=True):
             if isinstance(output, BaseException):
+                failure = self._safe_failure(output)
                 team_results.append({
                     "agent": {"id": agent.id, "name": agent.name},
-                    "status": "failed",
-                    "error": f"{type(output).__name__}: specialist failed; inspect server logs for details.",
+                    **failure,
                 })
             else:
                 team_results.append({
@@ -179,24 +224,28 @@ class MainManagerAgent:
                     "status": "completed",
                     "result": output,
                 })
+
+        successful = sum(item["status"] == "completed" for item in team_results)
+        failed = len(team_results) - successful
         return {
-            "status": "multi_agent_workflow",
+            "status": "multi_agent_workflow" if failed == 0 else "multi_agent_partial_failure",
             "manager": self.name,
             "task": cleaned,
             "workflow_mode": "parallel_specialists_with_qa_and_delivery",
             "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
             "orchestration": {
-                "selection_strategy": "highest capability score, with up to three domain specialists",
+                "selection_strategy": "highest positive capability scores, bounded to three domain specialists",
                 "quality_review": "quality specialist included when registered",
                 "delivery_handoff": "delivery specialist included when registered",
-                "result_contract": "Each specialist result is labeled completed or failed; completed means the specialist returned a result, not that an external action was verified.",
-                "next_step": "Review specialist outputs, resolve failures, then request any consequential external action with explicit authorization.",
+                "failure_policy": "Preserve successful outputs and identify failed or timed-out specialists for targeted retry.",
+                "result_contract": "completed means the specialist returned a result; external actions require explicit tool-confirmed evidence.",
+                "next_step": "Review outputs, retry only failed work, then authorize consequential external actions when appropriate.",
             },
             "team_count": len(team_results),
-            "successful_agents": sum(item["status"] == "completed" for item in team_results),
-            "failed_agents": sum(item["status"] == "failed" for item in team_results),
+            "successful_agents": successful,
+            "failed_agents": failed,
             "team_results": team_results,
-            "note": "Specialists currently return plans, checklists, or starter content. This is not proof that external tools ran or files were published.",
+            "note": "Specialists may return plans, checklists, or starter artifacts. External actions are not claimed unless a connected tool verifies them.",
         }
 
 
