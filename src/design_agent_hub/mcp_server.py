@@ -49,6 +49,52 @@ async def plan_design_workflow(
 
 
 
+
+@mcp.tool()
+async def prepare_design_workflow(
+    request: str,
+    headline: str = "Ideas into editable designs",
+    subheading: str = "Build, review, and refine with your workflow agent.",
+    audience: str = "",
+    platform: str = "",
+    desired_format: str = "",
+    width: int = 1080,
+    height: int = 1080,
+) -> str:
+    """Prepare a workflow plan plus editable Figma plugin JSON. This tool does not modify provider files."""
+    plan = await create_plan(
+        PlanRequest(
+            request=request,
+            audience=audience or None,
+            platform=platform or None,
+            desired_format=desired_format or None,
+        )
+    )
+    spec = build_figma_spec(
+        FigmaSpecRequest(
+            title=request[:100],
+            headline=headline,
+            subheading=subheading,
+            width=width,
+            height=height,
+        )
+    )
+    return json.dumps(
+        {
+            "status": "prepared",
+            "execution_status": "plan_only",
+            "plan": plan.model_dump(),
+            "figma_plugin_spec": spec,
+            "next_actions": [
+                "Review the plan and design spec.",
+                "Paste the spec into the local Figma plugin to create editable layers.",
+                "Use Canva template autofill with exact template field names for Canva assets.",
+                "Ask the user before provider writes or exports.",
+            ],
+        },
+        ensure_ascii=False,
+    )
+
 @mcp.tool()
 def figma_create_plugin_spec(
     title: str = "Design Agent Hub",
