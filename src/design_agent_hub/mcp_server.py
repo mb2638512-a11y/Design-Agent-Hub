@@ -179,13 +179,13 @@ if __name__ == "__main__":
 
 @mcp.tool()
 def list_tool_hubs(kind: str = "") -> str:
-    """List built-in tools and curated MCP/API integration catalogs. kind may be builtin, mcp, or api."""
+    """List built-in tools and curated MCP/API integration catalogs. kind may be builtin, mcp, api, or app."""
     return json.dumps(list_tool_catalog(kind.strip().lower() or None), ensure_ascii=False)
 
 
 @mcp.tool()
 def search_tool_hubs(query: str, kind: str = "") -> str:
-    """Search built-in capabilities and curated MCP/API references by name or purpose."""
+    """Search built-in capabilities and curated MCP/API/local-app references by name or purpose."""
     return json.dumps({"query": query, "kind": kind or "all", "matches": search_tool_catalog(query, kind.strip().lower() or None)}, ensure_ascii=False)
 
 
