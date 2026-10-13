@@ -25,9 +25,9 @@ def test_manager_registers_specialists_by_default():
     manager = MainManagerAgent()
     status = manager.status()
     assert status["manager_id"] == "manager"
-    assert status["registered_agent_count"] == 5
+    assert status["registered_agent_count"] == 6
     assert {item["id"] for item in status["agents"]} == {
-        "design", "coding", "research", "quality", "delivery"
+        "design", "coding", "content", "research", "quality", "delivery"
     }
 
 
@@ -77,3 +77,19 @@ def test_registry_rejects_duplicate_agent_ids():
     registry = AgentRegistry([FakeAgent()])
     with pytest.raises(ValueError, match="already registered"):
         registry.register(FakeAgent())
+
+
+def test_manager_routes_content_request():
+    result = asyncio.run(MainManagerAgent().dispatch("Write a YouTube script for a product launch"))
+    assert result["status"] == "delegated"
+    assert result["selected_agent"]["id"] == "content"
+    assert result["result"]["result_type"] == "content_starter_pack"
+
+
+def test_manager_returns_html_starter_for_landing_page():
+    result = asyncio.run(MainManagerAgent().dispatch("Create a landing page website"))
+    assert result["status"] == "delegated"
+    asset = result["result"]["starter_asset"]
+    assert asset["format"] == "html"
+    assert "<!doctype html>" in asset["content"].lower()
+    assert "viewport" in asset["content"]
