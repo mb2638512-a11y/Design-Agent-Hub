@@ -21,6 +21,15 @@ class FakeAgent:
         return {"agent_id": self.id, "task": task, "execution_status": "test_only"}
 
 
+class SlowAgent(FakeAgent):
+    id = "slow"
+    name = "Slow Agent"
+
+    async def run(self, task: str) -> dict[str, object]:
+        await asyncio.sleep(0.05)
+        return {"agent_id": self.id, "task": task}
+
+
 def test_manager_registers_specialists_by_default():
     manager = MainManagerAgent()
     status = manager.status()
@@ -29,6 +38,7 @@ def test_manager_registers_specialists_by_default():
     assert {item["id"] for item in status["agents"]} == {
         "design", "coding", "content", "research", "social_media", "quality", "delivery"
     }
+    assert status["execution_limits"]["agent_timeout_seconds"] > 0
 
 
 def test_manager_delegates_design_task():
@@ -95,7 +105,6 @@ def test_manager_returns_html_starter_for_landing_page():
     assert "viewport" in asset["content"]
 
 
-
 def test_manager_routes_social_media_account_workflow():
     task = "Manage my social media accounts across Facebook Pages and YouTube channels end-to-end"
     result = asyncio.run(MainManagerAgent().dispatch(task))
@@ -107,3 +116,25 @@ def test_manager_routes_social_media_account_workflow():
     assert "Facebook Pages" in social_result["target_platforms"]
     assert "YouTube" in social_result["target_platforms"]
     assert social_result["approval_gates"]
+
+
+def test_manager_collapses_excess_whitespace_before_dispatch():
+    result = asyncio.run(MainManagerAgent().dispatch("  Debug   a Python API bug  "))
+    assert result["status"] == "delegated"
+    assert result["task"] == "Debug a Python API bug"
+    assert result["result"]["task"] == "Debug a Python API bug"
+
+
+def test_manager_rejects_oversized_task():
+    result = asyncio.run(MainManagerAgent().dispatch("x" * 20_001))
+    assert result["status"] == "task_too_large"
+    assert result["max_task_characters"] == 20_000
+
+
+def test_manager_reports_specialist_timeout_without_hanging():
+    manager = MainManagerAgent(AgentRegistry([SlowAgent()]))
+    manager.agent_timeout_seconds = 0.001
+    result = asyncio.run(manager.dispatch("Handle a fake task"))
+    assert result["status"] == "agent_timed_out"
+    assert result["failure"]["status"] == "timed_out"
+    assert result["selected_agent"]["id"] == "slow"
