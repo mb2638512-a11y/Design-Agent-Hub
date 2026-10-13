@@ -35,6 +35,12 @@ Human / automation / compatible AI client
 
 Routing uses keyword/capability scoring, not autonomous reasoning. Complex cross-domain tasks can run up to three domain specialists plus Quality and Delivery in parallel. Results are proposals, not proof of external actions.
 
+## Public web workspace
+
+A responsive browser interface lives in [`web/index.html`](web/index.html). The GitHub Pages workflow publishes it when enabled in repository settings. It supports a local-only demo, connection to an API you deploy, manager dispatch, and starter SVG/ZIP downloads. The demo is clearly labeled and does not contact an AI model or social accounts.
+
+For a public deployment, follow [the deployment guide](docs/DEPLOYMENT.md). Each user or community deploys their own API; this project does not expose a shared backend or shared secret. The API supports explicit CORS origins through `CORS_ORIGINS`, and production mode requires `API_BEARER_TOKEN`.
+
 ## Quick start
 
 Python 3.11+ recommended.
