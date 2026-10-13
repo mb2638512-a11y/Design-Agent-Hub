@@ -22,7 +22,11 @@ class DesignSpecialistAgent:
         "accessibility", "figma", "canva", "penpot", "design",
     ]
     _svg_keywords: ClassVar[tuple[str, ...]] = (
-        "instagram post", "youtube thumbnail", "social post", "poster", "thumbnail", "banner", "graphic", "svg",
+        "instagram post", "youtube thumbnail", "social post", "poster", "thumbnail",
+        "banner", "graphic", "svg",
+    )
+    _html_keywords: ClassVar[tuple[str, ...]] = (
+        "landing page", "website", "web page", "html page", "website starter",
     )
 
     def match_score(self, task: str) -> int:
@@ -63,6 +67,44 @@ class DesignSpecialistAgent:
   <text x="88" y="980" fill="#94a3b8" font-family="Inter, Arial, sans-serif" font-size="18">Replace this copy and add your approved brand assets.</text>
 </svg>'''
 
+    @staticmethod
+    def _make_html(task: str) -> str:
+        title = escape(task.strip()[:100] or "Your next big idea")
+        description = escape("A responsive, accessible landing-page starter. Replace this text with verified product details.")
+        return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{description}">
+  <title>{title}</title>
+  <style>
+    :root {{ color-scheme: light; font-family: Inter, system-ui, sans-serif; color: #0f172a; background: #f8fafc; }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; }}
+    .wrap {{ min-height: 100vh; display: grid; place-items: center; padding: 2rem; }}
+    main {{ width: min(100%, 960px); padding: clamp(2rem, 7vw, 5rem); border-radius: 2rem; background: white; box-shadow: 0 24px 80px #0f172a14; }}
+    .eyebrow {{ color: #4f46e5; font-size: .8rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }}
+    h1 {{ max-width: 14ch; margin: 1rem 0; font-size: clamp(2.5rem, 7vw, 5.5rem); line-height: 1.02; letter-spacing: -.05em; }}
+    p {{ max-width: 60ch; color: #475569; font-size: 1.15rem; line-height: 1.75; }}
+    .cta {{ display: inline-block; margin-top: 1rem; padding: .9rem 1.3rem; border-radius: 999px; background: #4f46e5; color: white; font-weight: 700; text-decoration: none; }}
+    .cta:focus-visible {{ outline: 3px solid #0f172a; outline-offset: 4px; }}
+    footer {{ margin-top: 3rem; color: #64748b; font-size: .9rem; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main>
+      <div class="eyebrow">A clear place to start</div>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <a class="cta" href="#details">Explore the details</a>
+      <footer id="details">Replace placeholder copy, links, and claims before launch.</footer>
+    </main>
+  </div>
+</body>
+</html>
+"""
     async def run(self, task: str) -> dict[str, object]:
         plan = await create_plan(PlanRequest(request=task))
         result: dict[str, object] = {
@@ -81,5 +123,14 @@ class DesignSpecialistAgent:
                 "height": 1080,
                 "content": self._make_svg(task),
                 "note": "A deterministic starter graphic, not a polished client-approved design. Review text, accessibility, and brand rights before use.",
+            }
+        if any(keyword in task.casefold() for keyword in self._html_keywords):
+            result["starter_asset"] = {
+                "format": "html",
+                "editable": True,
+                "execution_status": "generated_in_response",
+                "filename": "index.html",
+                "content": self._make_html(task),
+                "note": "A responsive single-file starter. Review copy, links, accessibility, privacy, and security before deployment.",
             }
         return result
