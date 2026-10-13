@@ -21,12 +21,14 @@ class FakeAgent:
         return {"agent_id": self.id, "task": task, "execution_status": "test_only"}
 
 
-def test_manager_registers_design_agent_by_default():
+def test_manager_registers_specialists_by_default():
     manager = MainManagerAgent()
     status = manager.status()
     assert status["manager_id"] == "manager"
-    assert status["registered_agent_count"] == 1
-    assert status["agents"][0]["id"] == "design"
+    assert status["registered_agent_count"] == 5
+    assert {item["id"] for item in status["agents"]} == {
+        "design", "coding", "research", "quality", "delivery"
+    }
 
 
 def test_manager_delegates_design_task():
@@ -35,11 +37,32 @@ def test_manager_delegates_design_task():
     assert result["status"] == "delegated"
     assert result["selected_agent"]["id"] == "design"
     assert result["result"]["result_type"] == "design_plan"
+    assert result["result"]["starter_asset"]["format"] == "svg"
+
+
+def test_manager_routes_coding_task():
+    result = asyncio.run(MainManagerAgent().dispatch("Debug a Python API bug"))
+    assert result["status"] == "delegated"
+    assert result["selected_agent"]["id"] == "coding"
+    assert result["result"]["result_type"] == "implementation_plan"
+
+
+def test_manager_runs_collaborative_workflow_for_cross_domain_request():
+    result = asyncio.run(
+        MainManagerAgent().dispatch(
+            "Research competitors, build a website, test accessibility, and deliver the complete package"
+        )
+    )
+    assert result["status"] == "multi_agent_workflow"
+    ids = {item["agent"]["id"] for item in result["team_results"]}
+    assert "research" in ids
+    assert "coding" in ids
+    assert "quality" in ids
+    assert "delivery" in ids
 
 
 def test_manager_reports_when_no_agent_matches():
-    manager = MainManagerAgent()
-    result = asyncio.run(manager.dispatch("Calculate orbital trajectory"))
+    result = asyncio.run(MainManagerAgent().dispatch("Calculate orbital trajectory"))
     assert result["status"] == "no_matching_agent"
 
 
