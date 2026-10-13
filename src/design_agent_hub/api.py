@@ -24,7 +24,8 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
-from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog\nfrom .catalog_sync import sync_catalog_source
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
+from .catalog_sync import sync_catalog_source
 
 app = FastAPI(
     title="NOVA — Networked Orchestration & Visual Automation",
@@ -383,7 +384,7 @@ async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, obj
 async def tools_catalog_sources() -> dict[str, object]:
     """List optional upstream MCP/API metadata feeds without fetching them."""
     return {"sources": list_catalog_sources(), "fetches_external_data": False}
-\n\n@app.get("/tools/catalog/sync", dependencies=[Depends(require_api_token)])\nasync def sync_upstream_catalog(source_id: str) -> dict[str, object]:\n    """Explicitly fetch one allowlisted upstream feed as bounded metadata; no code is installed or executed."""\n    try:\n        return await sync_catalog_source(source_id)\n    except ValueError as exc:\n        raise HTTPException(status_code=422, detail=str(exc)) from exc\n    except RuntimeError as exc:\n        raise HTTPException(status_code=502, detail=str(exc)) from exc\n
+\n    """Explicitly fetch one allowlisted upstream feed as bounded metadata; no code is installed or executed."""\n    try:\n        return await sync_catalog_source(source_id)\n    except ValueError as exc:\n        raise HTTPException(status_code=422, detail=str(exc)) from exc\n    except RuntimeError as exc:\n        raise HTTPException(status_code=502, detail=str(exc)) from exc\n
 
 @app.get("/tools/catalog/sync", dependencies=[Depends(require_api_token)])
 async def sync_upstream_catalog(source_id: str) -> dict[str, object]:
