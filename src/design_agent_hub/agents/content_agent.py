@@ -20,7 +20,7 @@ class ContentSpecialistAgent:
 
     def match_score(self, task: str) -> int:
         normalized = task.casefold()
-        return sum(2 for capability in self.capabilities if capability in normalized)
+        return sum(4 for capability in self.capabilities if capability in normalized)
 
     @staticmethod
     def _starter_copy(task: str) -> dict[str, str]:
