@@ -1,46 +1,65 @@
-# Deploy Design Agent Hub for public use
+# Install and connect Design Agent Hub MCP
 
-The project is open source and can be used by anyone. This repository does not include a shared public API or shared secret. Each user, team, or community should deploy its own API and point the static web interface at that API.
+Design Agent Hub is a **frontend-free MCP server**. You connect it to an MCP-compatible AI client; there is no website or dashboard to open. The simplest and safest option is local **stdio** transport.
 
-## 1. Publish the web interface
+## Requirements
 
-The browser app is in `web/index.html`. It is static and can be hosted on GitHub Pages or any static web host. A GitHub Actions workflow in `.github/workflows/pages.yml` publishes the `web/` folder. In GitHub, open **Settings → Pages** and select **GitHub Actions** as the build/deployment source if required.
+- Python 3.11 or newer
+- Git
+- An MCP-compatible client (for example, Claude Desktop, Cursor, or another client that supports local MCP servers)
 
-## 2. Deploy your own API on Render
-
-1. Fork this repository to your own GitHub account.
-2. In Render, create a new Blueprint and select your fork. Render reads `render.yaml`.
-3. Wait for deployment and copy the service URL.
-4. Set `CORS_ORIGINS` to the exact origin hosting your frontend. Example: `https://YOUR-USERNAME.github.io` (no path and no trailing slash). If you host the UI elsewhere, use that origin instead.
-5. Render generates `API_BEARER_TOKEN`. Keep it private. Enter it in the web UI only when using your own API.
-6. Check `https://YOUR-API-URL/health` and open `https://YOUR-API-URL/docs` to verify the service.
-
-Free hosting plans may sleep, limit resources, or change. Check the provider's current pricing and limits before relying on it.
-
-## 3. Run with Docker
+## 1. Install
 
 ```bash
-docker build -t design-agent-hub .
-docker run --rm -p 8000:8000 \
-  -e APP_ENV=production \
-  -e API_BEARER_TOKEN='replace-with-a-long-random-secret' \
-  -e CORS_ORIGINS='https://YOUR-USERNAME.github.io' \
-  design-agent-hub
+git clone https://github.com/mb2638512-a11y/Design-Agent-Hub.git
+cd Design-Agent-Hub
+python -m venv .venv
+# Windows PowerShell:
+.venv\\Scripts\\Activate.ps1
+# macOS/Linux:
+# source .venv/bin/activate
+pip install -e .
 ```
 
-Use HTTPS behind a reverse proxy in production. Keep secrets in the hosting platform's secret manager, rotate them, and restrict CORS to the frontend origin you actually use. Do not expose an unauthenticated API to the public internet.
+## 2. Configure your MCP client
 
-## 4. Use the web interface
+The server entry point is `design_agent_hub.mcp_server`. Configure your MCP client to launch it using the same Python environment where the package was installed.
 
-1. Open the static site.
-2. Enter your deployed API URL and private API bearer token.
-3. Click **Check connection**.
-4. Enter a task and choose **Run on my API**. You can also download editable SVG/HTML starter assets or a ZIP starter package.
+Example MCP configuration for clients that use a JSON `mcpServers` object (replace the path with your absolute repository path):
 
-The UI keeps the token in page memory only and does not save it in localStorage. Clear the fields after use, especially on a shared device. The **Try demo mode** button is local-only sample output; it does not call an AI model or contact social platforms.
+```json
+{
+  "mcpServers": {
+    "design-agent-hub": {
+      "command": "python",
+      "args": ["-m", "design_agent_hub.mcp_server"],
+      "cwd": "/absolute/path/to/Design-Agent-Hub"
+    }
+  }
+}
+```
 
-## Current limits
+If your client does not support `cwd`, use the absolute path to that environment's Python executable and ensure the package was installed with `pip install -e .`. Restart or reload the MCP client, then ask it to list the tools from **design-agent-hub**.
 
-- Agents return plans and starter content; they do not guarantee arbitrary tasks are completed autonomously.
-- The social platform catalog is informational. OAuth, account inventory, scheduling, publishing, comments, and analytics adapters still need implementation and provider approval.
-- Never enter provider passwords or OAuth client secrets in prompts or source control. Public writes and sensitive actions should require explicit approval.
+## 3. MCP tools
+
+- `list_registered_agents` — discover the manager and specialists.
+- `manager_dispatch_task` — route a task to a specialist workflow.
+- `list_design_categories` and `search_design_jobs` — discover supported design jobs.
+- `recommend_design_tool` — choose a tool using free-first recommendations.
+- `plan_design_workflow` and `prepare_design_workflow` — prepare a plan/spec.
+- `list_supported_social_platforms` — inspect the supported social platform catalog and integration readiness.
+- Canva/Figma tools — list or operate on resources permitted by configured credentials; creation/export actions require approval flags.
+
+## 4. Configure provider credentials only if needed
+
+Copy `.env.example` to `.env` and add only credentials for providers you personally control and are authorized to access. Never commit `.env` or paste secrets into prompts. The server does not provide shared accounts, shared OAuth tokens, or free paid-plan access.
+
+## Current limits and safety
+
+- The server is MCP-first and has no frontend. A REST API remains available as an optional interface.
+- Specialist routing is deterministic capability matching, not a separate autonomous frontier model.
+- Some tools produce plans or starter specs rather than completing every task end-to-end.
+- Social platforms are currently a capability/readiness catalog, not connected accounts; OAuth, publishing, comments, scheduling, and analytics integrations still need provider-specific implementation and approval.
+- Do not expose a remote MCP endpoint publicly without authentication and transport security. Local stdio is the default and safest setup.
+- External writes, publishing, exports, and actions that can consume quota require explicit approval where supported.
