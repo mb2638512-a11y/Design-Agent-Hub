@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -63,7 +64,7 @@ class CanvaConnector:
         if not job_id.strip():
             raise ValueError("job_id is required")
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(f"{self.base_url}/v1/autofills/{job_id}", headers=self._headers())
+            response = await client.get(f"{self.base_url}/v1/autofills/{quote(job_id, safe='')}", headers=self._headers())
             response.raise_for_status()
             return response.json()
 
@@ -102,6 +103,6 @@ class CanvaConnector:
         if not export_id.strip():
             raise ValueError("export_id is required")
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(f"{self.base_url}/v1/exports/{export_id}", headers=self._headers())
+            response = await client.get(f"{self.base_url}/v1/exports/{quote(export_id, safe='')}", headers=self._headers())
             response.raise_for_status()
             return response.json()
