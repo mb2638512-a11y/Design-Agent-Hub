@@ -5,7 +5,6 @@ must use each provider's approved API, granted OAuth scopes, and user approval.
 """
 
 from __future__ import annotations
-
 from typing import Any
 
 
