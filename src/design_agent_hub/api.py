@@ -22,6 +22,22 @@ app = FastAPI(
 )
 
 
+class WorkflowPrepareRequest(BaseModel):
+    request: str = Field(min_length=3, max_length=5000)
+    audience: str | None = Field(default=None, max_length=500)
+    platform: str | None = Field(default=None, max_length=100)
+    constraints: list[str] = Field(default_factory=list, max_length=30)
+    desired_format: str | None = Field(default=None, max_length=100)
+    headline: str = Field(default="Ideas into editable designs", min_length=1, max_length=180)
+    subheading: str = Field(default="Build, review, and refine with your workflow agent.", min_length=1, max_length=240)
+    width: int = Field(default=1080, ge=320, le=4000)
+    height: int = Field(default=1080, ge=320, le=4000)
+    background: str = Field(default="#F8FAFC", pattern=r"^#[0-9a-fA-F]{6}$")
+    accent: str = Field(default="#2563EB", pattern=r"^#[0-9a-fA-F]{6}$")
+    foreground: str = Field(default="#0F172A", pattern=r"^#[0-9a-fA-F]{6}$")
+    secondary: str = Field(default="#475569", pattern=r"^#[0-9a-fA-F]{6}$")
+
+
 class CanvaCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     width: int = Field(ge=40, le=8000)
@@ -79,6 +95,45 @@ async def catalog_search(q: str) -> dict[str, object]:
 async def plan(request: PlanRequest) -> dict[str, object]:
     result = await create_plan(request)
     return result.model_dump()
+
+
+@app.post("/workflow/prepare", dependencies=[Depends(require_api_token)])
+async def prepare_workflow(request: WorkflowPrepareRequest) -> dict[str, object]:
+    """Prepare a plan and editable Figma spec; no provider writes occur in this endpoint."""
+    plan = await create_plan(
+        PlanRequest(
+            request=request.request,
+            audience=request.audience,
+            platform=request.platform,
+            constraints=request.constraints,
+            desired_format=request.desired_format,
+        )
+    )
+    spec = build_figma_spec(
+        FigmaSpecRequest(
+            title=request.request[:100],
+            headline=request.headline,
+            subheading=request.subheading,
+            width=request.width,
+            height=request.height,
+            background=request.background,
+            accent=request.accent,
+            foreground=request.foreground,
+            secondary=request.secondary,
+        )
+    )
+    return {
+        "status": "prepared",
+        "execution_status": "plan_only",
+        "plan": plan.model_dump(),
+        "figma_plugin_spec": spec,
+        "next_actions": [
+            "Review the plan and generated design spec.",
+            "Paste the spec into the local Figma plugin to create editable layers.",
+            "For Canva, provide a brand_template_id and the template's exact autofill field names.",
+            "Approve any external write or export explicitly before calling provider endpoints.",
+        ],
+    }
 
 
 @app.post("/figma/plugin-spec", dependencies=[Depends(require_api_token)])
