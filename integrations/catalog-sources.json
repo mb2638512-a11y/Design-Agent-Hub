@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "policy": "metadata_only_until_reviewed",
+  "sources": [
+    {
+      "id": "mcphq-landscape",
+      "kind": "mcp",
+      "name": "MCPHQ Awesome MCP Servers",
+      "url": "https://landscape.mcphq.org/api/servers.json",
+      "repository": "https://github.com/mcpHQ/awesome-mcp-servers",
+      "purpose": "Curated structured metadata for discovering MCP servers",
+      "license_note": "Review the source repository license and attribution requirements before redistributing its dataset",
+      "sync_mode": "explicit_opt_in_only",
+      "verified_by_this_project": false
+    },
+    {
+      "id": "apis-guru-openapi-directory",
+      "kind": "api",
+      "name": "APIs.guru OpenAPI Directory",
+      "url": "https://api.apis.guru/v2/list.json",
+      "repository": "https://github.com/APIs-guru/openapi-directory",
+      "purpose": "Discover public API specifications that can be used to generate clients",
+      "license_note": "Review each API provider's terms, authentication, license, and rate limits independently",
+      "sync_mode": "explicit_opt_in_only",
+      "verified_by_this_project": false
+    }
+  ]
+}
