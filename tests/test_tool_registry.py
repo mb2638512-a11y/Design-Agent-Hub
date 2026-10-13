@@ -25,3 +25,12 @@ def test_search_can_scope_to_one_hub():
 
 def test_invalid_kind_returns_clear_error():
     assert "error" in list_tool_catalog("unknown")
+
+
+def test_upstream_catalog_sources_are_opt_in_metadata_only():
+    from design_agent_hub.tool_registry import list_catalog_sources
+
+    sources = list_catalog_sources()
+    assert {source["kind"] for source in sources} == {"mcp", "api"}
+    assert all(source["sync_mode"] == "explicit_opt_in_only" for source in sources)
+    assert all(source["verified_by_this_project"] is False for source in sources)
