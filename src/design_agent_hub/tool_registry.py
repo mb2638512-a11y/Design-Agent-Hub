@@ -92,3 +92,32 @@ def search_tool_catalog(query: str, kind: str | None = None) -> list[dict[str, A
         item for items in catalog["items"].values() for item in items
         if q in " ".join(str(value) for value in item.values()).casefold()
     ][:50]
+
+
+CATALOG_SOURCES: list[dict[str, Any]] = [
+    {
+        "id": "mcphq-landscape",
+        "kind": "mcp",
+        "name": "MCPHQ Awesome MCP Servers",
+        "url": "https://landscape.mcphq.org/api/servers.json",
+        "repository": "https://github.com/mcpHQ/awesome-mcp-servers",
+        "purpose": "Curated structured metadata for discovering MCP servers.",
+        "sync_mode": "explicit_opt_in_only",
+        "verified_by_this_project": False,
+    },
+    {
+        "id": "apis-guru-openapi-directory",
+        "kind": "api",
+        "name": "APIs.guru OpenAPI Directory",
+        "url": "https://api.apis.guru/v2/list.json",
+        "repository": "https://github.com/APIs-guru/openapi-directory",
+        "purpose": "Discover public API specifications for possible client generation.",
+        "sync_mode": "explicit_opt_in_only",
+        "verified_by_this_project": False,
+    },
+]
+
+
+def list_catalog_sources() -> list[dict[str, Any]]:
+    """Return upstream metadata catalog feeds; does not fetch or trust them automatically."""
+    return [dict(source) for source in CATALOG_SOURCES]
