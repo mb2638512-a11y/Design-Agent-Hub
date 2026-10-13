@@ -33,7 +33,7 @@ Human / automation / compatible AI client
  SVG draft               workflow              manifest
 ```
 
-Routing uses keyword/capability scoring, not autonomous reasoning. Complex cross-domain tasks can run up to three domain specialists plus Quality and Delivery in parallel. Results are proposals, not proof of external actions.
+Routing uses deterministic capability scoring rather than unconstrained autonomous reasoning. The manager now creates an explicit task plan, assigns up to three domain specialists plus Quality and Delivery for complex work, enforces per-agent timeouts, validates result structure, applies a narrow metadata-only self-repair, and preserves partial successes. Structural QA does not prove factual accuracy or visual quality. An optional local SQLite memory stores compact task summaries only when explicitly enabled. The planner can use a configured primary OpenAI-compatible model, then an optional fallback model, then deterministic planning.
 
 ## MCP first — no frontend
 
@@ -79,6 +79,13 @@ The Social Media Agent plans workflows for Facebook Pages, Instagram, YouTube, T
 - **Model:** optional OpenAI-compatible endpoint settings are documented in `.env.example`; no model credentials are bundled.
 
 Do not commit secrets, customer assets, or private design files. Require explicit user approval before publishing, overwriting, sharing externally, or spending paid credits. Respect provider terms, rate limits, licensing, and privacy.
+
+## Manager reliability, memory, and model failover
+
+- Set `MODEL_BASE_URL`, `MODEL_API_KEY`, and `MODEL_NAME` for the primary OpenAI-compatible chat-completions endpoint.
+- Optionally set `MODEL_FALLBACK_BASE_URL`, `MODEL_FALLBACK_API_KEY`, and `MODEL_FALLBACK_NAME`. If the primary fails or returns an invalid response, the planner tries the fallback, then uses its deterministic planner.
+- Local task memory is **off by default**. To enable it, set `MANAGER_MEMORY_ENABLED=true` and optionally `MANAGER_MEMORY_PATH` to a private local path. It stores at most 100 task strings (bounded to 2,000 characters) plus compact status/agent summaries—not full specialist outputs. MCP tools `manager_recent_task_memory` and `manager_clear_task_memory` provide read/delete controls; deletion requires explicit approval. Keep the database private and disable memory if tasks may contain secrets or sensitive data.
+- The manager's structural self-repair can add missing agent identity metadata only. It does not silently rewrite task content or claim semantic/factual verification. Failed agents are reported for targeted retry; automatic retries are avoided to reduce duplicate external side effects.
 
 ## Development
 
