@@ -350,7 +350,13 @@ async def connector_status() -> dict[str, object]:
         "figma": FigmaConnector().status().as_dict(),
         "canva": CanvaConnector().status().as_dict(),
         "model": {
-            "configured": bool(os.getenv("MODEL_BASE_URL") and os.getenv("MODEL_API_KEY") and os.getenv("MODEL_NAME")),
-            "note": "Optional OpenAI-compatible model endpoint; no model credentials are bundled.",
+            "primary_configured": bool(os.getenv("MODEL_BASE_URL") and os.getenv("MODEL_API_KEY") and os.getenv("MODEL_NAME")),
+            "fallback_configured": bool(os.getenv("MODEL_FALLBACK_BASE_URL") and os.getenv("MODEL_FALLBACK_API_KEY") and os.getenv("MODEL_FALLBACK_NAME")),
+            "strategy": "primary_then_fallback_then_deterministic",
+            "note": "Optional OpenAI-compatible endpoints; credentials are never returned.",
+        },
+        "manager_memory": {
+            "enabled": os.getenv("MANAGER_MEMORY_ENABLED", "false").strip().casefold() in {"1", "true", "yes", "on"},
+            "storage": "local SQLite; compact task summaries only",
         },
     }
