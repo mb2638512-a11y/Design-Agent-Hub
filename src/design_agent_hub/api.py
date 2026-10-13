@@ -13,6 +13,7 @@ from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .planner import PlanRequest, create_plan
+from .figma_spec import FigmaSpecRequest, build_figma_spec
 
 app = FastAPI(
     title="Design Agent Hub",
@@ -78,6 +79,12 @@ async def catalog_search(q: str) -> dict[str, object]:
 async def plan(request: PlanRequest) -> dict[str, object]:
     result = await create_plan(request)
     return result.model_dump()
+
+
+@app.post("/figma/plugin-spec", dependencies=[Depends(require_api_token)])
+async def figma_plugin_spec(request: FigmaSpecRequest) -> dict[str, object]:
+    """Return a design spec to paste into the local Figma plugin; does not modify any file."""
+    return build_figma_spec(request)
 
 
 @app.get("/connectors/figma/files/{file_key}", dependencies=[Depends(require_api_token)])
