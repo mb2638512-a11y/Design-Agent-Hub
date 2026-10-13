@@ -14,6 +14,7 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
+from .task_memory import clear_memory, recent_tasks
 
 mcp = FastMCP("design-agent-hub")
 
@@ -26,13 +27,27 @@ def list_registered_agents() -> str:
 
 @mcp.tool()
 async def manager_dispatch_task(task: str) -> str:
-    """Ask the main manager to select and delegate to a specialist; no external write is implied."""
+    """Ask the main manager to plan, route, validate and report a specialist task."""
     return json.dumps(await main_manager.dispatch(task), ensure_ascii=False)
 
 
 @mcp.tool()
+def manager_recent_task_memory(limit: int = 10) -> str:
+    """Read recent compact manager task summaries if opt-in local memory is enabled."""
+    return json.dumps(recent_tasks(limit), ensure_ascii=False)
+
+
+@mcp.tool()
+def manager_clear_task_memory(user_approved: bool = False) -> str:
+    """Delete local manager task history. Requires explicit human approval."""
+    if not user_approved:
+        return json.dumps({"status": "approval_required", "message": "Ask the human to approve deleting local task memory, then call again with user_approved=true."})
+    return json.dumps(clear_memory(), ensure_ascii=False)
+
+
+@mcp.tool()
 def list_supported_social_platforms() -> str:
-    """List supported social platforms, workflow capabilities, and integration readiness; this is a catalog, not a live account connection."""
+    """List supported social platforms and integration readiness; this is a catalog, not a live account connection."""
     return json.dumps(list_social_platforms(), ensure_ascii=False)
 
 
@@ -63,18 +78,8 @@ async def plan_design_workflow(
     desired_format: str = "",
 ) -> str:
     """Create a plan only; does not edit, publish, overwrite, or spend credits."""
-    plan = await create_plan(
-        PlanRequest(
-            request=request,
-            audience=audience or None,
-            platform=platform or None,
-            constraints=constraints or [],
-            desired_format=desired_format or None,
-        )
-    )
+    plan = await create_plan(PlanRequest(request=request, audience=audience or None, platform=platform or None, constraints=constraints or [], desired_format=desired_format or None))
     return plan.model_dump_json(indent=2)
-
-
 
 
 @mcp.tool()
@@ -89,38 +94,10 @@ async def prepare_design_workflow(
     height: int = 1080,
 ) -> str:
     """Prepare a workflow plan plus editable Figma plugin JSON. This tool does not modify provider files."""
-    plan = await create_plan(
-        PlanRequest(
-            request=request,
-            audience=audience or None,
-            platform=platform or None,
-            desired_format=desired_format or None,
-        )
-    )
-    spec = build_figma_spec(
-        FigmaSpecRequest(
-            title=request[:100],
-            headline=headline,
-            subheading=subheading,
-            width=width,
-            height=height,
-        )
-    )
-    return json.dumps(
-        {
-            "status": "prepared",
-            "execution_status": "plan_only",
-            "plan": plan.model_dump(),
-            "figma_plugin_spec": spec,
-            "next_actions": [
-                "Review the plan and design spec.",
-                "Paste the spec into the local Figma plugin to create editable layers.",
-                "Use Canva template autofill with exact template field names for Canva assets.",
-                "Ask the user before provider writes or exports.",
-            ],
-        },
-        ensure_ascii=False,
-    )
+    plan = await create_plan(PlanRequest(request=request, audience=audience or None, platform=platform or None, desired_format=desired_format or None))
+    spec = build_figma_spec(FigmaSpecRequest(title=request[:100], headline=headline, subheading=subheading, width=width, height=height))
+    return json.dumps({"status": "prepared", "execution_status": "plan_only", "plan": plan.model_dump(), "figma_plugin_spec": spec, "next_actions": ["Review the plan and design spec.", "Paste the spec into the local Figma plugin to create editable layers.", "Use Canva template autofill with exact template field names for Canva assets.", "Ask the user before provider writes or exports."]}, ensure_ascii=False)
+
 
 @mcp.tool()
 def figma_create_plugin_spec(
@@ -134,86 +111,64 @@ def figma_create_plugin_spec(
     foreground: str = "#0F172A",
     secondary: str = "#475569",
 ) -> str:
-    """Generate a JSON spec for editable Figma layers. Paste the result into the local Figma plugin; no file is changed yet."""
-    request = FigmaSpecRequest(
-        title=title,
-        headline=headline,
-        subheading=subheading,
-        width=width,
-        height=height,
-        background=background,
-        accent=accent,
-        foreground=foreground,
-        secondary=secondary,
-    )
+    """Generate JSON for editable Figma layers; paste it into the local plugin to create them."""
+    request = FigmaSpecRequest(title=title, headline=headline, subheading=subheading, width=width, height=height, background=background, accent=accent, foreground=foreground, secondary=secondary)
     return json.dumps(build_figma_spec(request), ensure_ascii=False)
+
 
 @mcp.tool()
 async def figma_get_file(file_key: str) -> str:
     """Read a Figma file the configured credential is authorized to access."""
-    result = await FigmaConnector().get_file(file_key)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await FigmaConnector().get_file(file_key), ensure_ascii=False)
 
 
 @mcp.tool()
 async def figma_export_node_images(file_key: str, node_ids: list[str], image_format: str = "png") -> str:
     """Request image export URLs for selected nodes in an authorized Figma file."""
-    result = await FigmaConnector().export_node_images(file_key, node_ids, image_format)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await FigmaConnector().export_node_images(file_key, node_ids, image_format), ensure_ascii=False)
 
 
 @mcp.tool()
 async def canva_list_designs(limit: int = 20) -> str:
     """List Canva designs available to the configured OAuth credential."""
-    result = await CanvaConnector().list_designs(limit)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await CanvaConnector().list_designs(limit), ensure_ascii=False)
 
 
 @mcp.tool()
 async def canva_create_design(title: str, width: int, height: int, user_approved: bool = False) -> str:
-    """Create a blank Canva design. Set user_approved=true only after the human explicitly approves creation."""
+    """Create a blank Canva design only after explicit human approval."""
     if not user_approved:
         return json.dumps({"status": "approval_required", "message": "Ask the user to approve creating a Canva design, then call again with user_approved=true."})
-    result = await CanvaConnector().create_design(title, width, height)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await CanvaConnector().create_design(title, width, height), ensure_ascii=False)
 
 
 @mcp.tool()
 async def canva_start_export(design_id: str, file_format: str = "png", user_approved: bool = False) -> str:
-    """Start a Canva export. Ask the human first because exports may consume provider quota."""
+    """Start a Canva export only after explicit human approval because it may consume quota."""
     if not user_approved:
         return json.dumps({"status": "approval_required", "message": "Ask the user to approve the export, then call again with user_approved=true."})
-    result = await CanvaConnector().start_export(design_id, file_format)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await CanvaConnector().start_export(design_id, file_format), ensure_ascii=False)
 
 
 @mcp.tool()
 async def canva_get_export(export_id: str) -> str:
     """Check the status/result of an existing Canva export job."""
-    result = await CanvaConnector().get_export(export_id)
-    return json.dumps(result, ensure_ascii=False)
-
+    return json.dumps(await CanvaConnector().get_export(export_id), ensure_ascii=False)
 
 
 @mcp.tool()
-async def canva_create_autofill_job(
-    brand_template_id: str,
-    data: dict,
-    title: str = "",
-    user_approved: bool = False,
-) -> str:
-    """Create a Canva design by filling tagged brand-template fields. Requires eligible Canva plan and user approval."""
+async def canva_create_autofill_job(brand_template_id: str, data: dict, title: str = "", user_approved: bool = False) -> str:
+    """Create a Canva design by filling tagged template fields after explicit approval."""
     if not user_approved:
         return json.dumps({"status": "approval_required", "message": "Ask the user to approve creating a design from this Canva template, then call again with user_approved=true."})
-    result = await CanvaConnector().create_autofill_job(brand_template_id, data, title or None)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await CanvaConnector().create_autofill_job(brand_template_id, data, title or None), ensure_ascii=False)
 
 
 @mcp.tool()
 async def canva_get_autofill_job(job_id: str) -> str:
     """Check an existing Canva template-autofill job; successful jobs include the created design."""
-    result = await CanvaConnector().get_autofill_job(job_id)
-    return json.dumps(result, ensure_ascii=False)
+    return json.dumps(await CanvaConnector().get_autofill_job(job_id), ensure_ascii=False)
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
