@@ -99,10 +99,11 @@ def test_manager_returns_html_starter_for_landing_page():
 def test_manager_routes_social_media_account_workflow():
     task = "Manage my social media accounts across Facebook Pages and YouTube channels end-to-end"
     result = asyncio.run(MainManagerAgent().dispatch(task))
-    assert result["status"] == "delegated"
+    assert result["status"] == "multi_agent_workflow"
     assert result["selected_agent"]["id"] == "social_media"
-    assert result["result"]["result_type"] == "social_media_operations_plan"
-    assert result["result"]["execution_status"] == "plan_only_accounts_not_changed"
-    assert "Facebook Pages" in result["result"]["target_platforms"]
-    assert "YouTube" in result["result"]["target_platforms"]
-    assert result["result"]["approval_gates"]
+    social_result = next(item["result"] for item in result["team_results"] if item["agent"]["id"] == "social_media")
+    assert social_result["result_type"] == "social_media_operations_plan"
+    assert social_result["execution_status"] == "plan_only_accounts_not_changed"
+    assert "Facebook Pages" in social_result["target_platforms"]
+    assert "YouTube" in social_result["target_platforms"]
+    assert social_result["approval_gates"]
