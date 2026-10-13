@@ -36,6 +36,7 @@ def test_canva_create_validates_dimensions_before_network():
 
 def test_canva_export_rejects_unsupported_format():
     import asyncio
+
     import pytest
 
     connector = CanvaConnector(token="")
@@ -93,3 +94,16 @@ def test_recommend_tools_endpoint_is_free_first_and_plan_only():
     body = response.json()
     assert body["recommended_tool"] == "canva"
     assert body["execution_status"] == "recommendation_only"
+
+
+def test_manager_api_lists_design_agent():
+    response = client.get("/agents")
+    assert response.status_code == 200
+    assert response.json()["agents"][0]["id"] == "design"
+
+
+def test_manager_api_delegates_design_task():
+    response = client.post("/manager/dispatch", json={"task": "Create an Instagram post design"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "delegated"
+    assert response.json()["selected_agent"]["id"] == "design"
