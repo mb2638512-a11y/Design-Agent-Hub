@@ -14,6 +14,7 @@ from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .planner import PlanRequest, create_plan
 from .figma_spec import FigmaSpecRequest, build_figma_spec
+from .provider_router import recommend_tools
 
 app = FastAPI(
     title="Design Agent Hub",
@@ -84,6 +85,18 @@ async def health() -> dict[str, str]:
 @app.get("/catalog", dependencies=[Depends(require_api_token)])
 async def catalog() -> dict[str, object]:
     return {"categories": get_catalog(), "category_count": len(get_catalog())}
+
+
+@app.post("/tools/recommend", dependencies=[Depends(require_api_token)])
+async def recommend_design_tools(payload: dict[str, object]) -> dict[str, object]:
+    """Recommend free-first design providers for a task; never executes provider actions."""
+    request = payload.get("task", "")
+    connected = payload.get("connected_providers", [])
+    if not isinstance(request, str) or len(request.strip()) < 3:
+        raise HTTPException(status_code=422, detail="task must be a string of at least 3 characters")
+    if not isinstance(connected, list) or not all(isinstance(item, str) for item in connected):
+        raise HTTPException(status_code=422, detail="connected_providers must be a list of strings")
+    return recommend_tools(request, connected)
 
 
 @app.get("/catalog/search", dependencies=[Depends(require_api_token)])
