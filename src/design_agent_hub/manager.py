@@ -54,7 +54,7 @@ class MainManagerAgent:
     """Plan, route, bound, validate, and report specialist workflows."""
 
     id = "manager"
-    name = "Main Manager Agent"
+    name = "NOVA — Networked Orchestration & Visual Automation"
     agent_timeout_seconds = 60
     max_task_characters = 20_000
     max_domain_specialists = 3
