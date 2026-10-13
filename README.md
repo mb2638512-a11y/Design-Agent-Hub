@@ -2,7 +2,7 @@
 
 A provider-agnostic agent hub for design workflows, coding plans, research briefs, QA checklists, and delivery handoffs. It exposes a REST API and MCP tools and has optional official Canva/Figma adapters.
 
-> **Status: early MVP.** The manager and six specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists, deterministic SVG and HTML starter assets, and structured starter copy; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma actions still require credentials, account permissions, eligible plans, and an end-to-end test.
+> **Status: early MVP.** The manager and seven specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists, deterministic SVG and HTML starter assets, and structured starter copy; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma and social platform actions still require credentials, account permissions, eligible plans, and end-to-end tests.
 
 ## Specialist team
 
@@ -11,6 +11,7 @@ A provider-agnostic agent hub for design workflows, coding plans, research brief
 - **Coding Agent:** proposes implementation, testing, security, and deployment steps; does not edit repositories or run code.
 - **Content Agent:** creates editable starter copy for headlines, captions, scripts, product descriptions, and campaign briefs; it does not fact-check or publish content.
 - **Research Agent:** structures source-aware research; does not perform live web searches by itself.
+- **Social Media Agent:** plans owned-account setup, content calendars, approved publishing, moderation, and analytics. Live actions require authorized connectors and account-owner approval.
 - **Quality Agent:** returns review gates for correctness, accessibility, privacy, and delivery; does not claim checks actually ran.
 - **Delivery Agent:** prepares a handoff manifest; does not upload, email, publish, or export files itself.
 
