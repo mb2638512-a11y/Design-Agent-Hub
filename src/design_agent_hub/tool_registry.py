@@ -56,7 +56,7 @@ API_CATALOG: list[dict[str, Any]] = [
 ]
 
 
-def list_tool_catalog(kind: str | None = None, free_only: bool = False) -> dict[str, Any]:
+def list_tool_catalog(kind: str | None = None, no_key_only: bool = False) -> dict[str, Any]:
     """Return built-in capabilities and curated integration references."""
     groups = {"builtin": BUILTIN_TOOLS, "mcp": MCP_CATALOG, "api": API_CATALOG}
     if kind and kind not in groups:
@@ -66,12 +66,12 @@ def list_tool_catalog(kind: str | None = None, free_only: bool = False) -> dict[
     for group, items in selected.items():
         result[group] = [
             item for item in items
-            if not free_only or not item.get("needs_external_api_key", False)
+            if not no_key_only or not item.get("needs_external_api_key", False)
         ]
     return {
         "counts": {group: len(items) for group, items in result.items()},
         "total": sum(len(items) for items in result.values()),
-        "free_no_external_api_key_count": sum(
+        "no_external_api_key_count": sum(
             1 for items in result.values() for item in items
             if not item.get("needs_external_api_key", False)
         ),
