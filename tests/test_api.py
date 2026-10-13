@@ -54,3 +54,22 @@ def test_figma_spec_rejects_invalid_color():
 
     with pytest.raises(ValueError):
         FigmaSpecRequest(background="red")
+
+
+
+def test_workflow_prepare_returns_plan_and_figma_spec(monkeypatch):
+    monkeypatch.delenv("API_BEARER_TOKEN", raising=False)
+    monkeypatch.setenv("APP_ENV", "development")
+    response = client.post(
+        "/workflow/prepare",
+        json={
+            "request": "Create a launch social post",
+            "headline": "Launch day",
+            "subheading": "A clear message for the audience.",
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["execution_status"] == "plan_only"
+    assert body["plan"]["steps"]
+    assert body["figma_plugin_spec"]["frames"][0]["elements"]
