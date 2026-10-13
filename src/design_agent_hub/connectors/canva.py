@@ -85,8 +85,7 @@ class CanvaConnector:
         """Start a Canva export job; may use provider quota and requires explicit user approval."""
         supported = {"pdf", "jpg", "png", "gif", "pptx", "mp4", "csv", "html_bundle", "html_standalone"}
         if file_format not in supported:
-            raise ValueError(f"Unsupported format. Choose one of: {
-.join(sorted(supported))}")
+            raise ValueError("Unsupported format. Choose one of: " + ", ".join(sorted(supported)))
         if not design_id.strip():
             raise ValueError("design_id is required")
         async with httpx.AsyncClient(timeout=30.0) as client:
