@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ..catalog import search_catalog
 from ..planner import PlanRequest, create_plan
 
@@ -10,7 +12,7 @@ class DesignSpecialistAgent:
     id = "design"
     name = "Design Agent"
     description = "Plans UI/UX, brand, social, graphics, documents, motion, vector, and 3D design work."
-    capabilities = [
+    capabilities: ClassVar[list[str]] = [
         "ui ux", "website", "landing page", "mobile app", "dashboard", "wireframe",
         "prototype", "design system", "branding", "logo", "social media", "instagram",
         "youtube thumbnail", "advertising", "presentation", "pitch deck", "document",
