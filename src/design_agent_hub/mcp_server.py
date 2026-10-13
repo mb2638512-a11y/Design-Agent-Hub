@@ -15,7 +15,8 @@ from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
 from .task_memory import clear_memory, recent_tasks
-from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog\nfrom .catalog_sync import sync_catalog_source
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
+from .catalog_sync import sync_catalog_source
 
 mcp = FastMCP("nova-design-social-agent")
 
