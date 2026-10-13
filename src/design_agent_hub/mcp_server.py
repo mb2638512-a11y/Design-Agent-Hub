@@ -15,6 +15,7 @@ from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
 from .task_memory import clear_memory, recent_tasks
+from .tool_registry import list_tool_catalog, search_tool_catalog
 
 mcp = FastMCP("design-agent-hub")
 
@@ -172,3 +173,16 @@ async def canva_get_autofill_job(job_id: str) -> str:
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
+
+
+
+@mcp.tool()
+def list_tool_hubs(kind: str = "") -> str:
+    """List built-in tools and curated MCP/API integration catalogs. kind may be builtin, mcp, or api."""
+    return json.dumps(list_tool_catalog(kind.strip().lower() or None), ensure_ascii=False)
+
+
+@mcp.tool()
+def search_tool_hubs(query: str, kind: str = "") -> str:
+    """Search built-in capabilities and curated MCP/API references by name or purpose."""
+    return json.dumps({"query": query, "kind": kind or "all", "matches": search_tool_catalog(query, kind.strip().lower() or None)}, ensure_ascii=False)
