@@ -40,7 +40,7 @@ python -m venv .venv
 # Windows: .venv\\Scripts\\activate
 # macOS/Linux: source .venv/bin/activate
 pip install -e ".[dev]"
-cp .env.example .env
+cp .env.example .env  # Windows PowerShell: Copy-Item .env.example .env
 uvicorn design_agent_hub.api:app --host 127.0.0.1 --port 8000
 ```
 
@@ -53,6 +53,34 @@ curl -X POST http://127.0.0.1:8000/plan \
   -H "Content-Type: application/json" \
   -d '{"request":"Create a clean mobile banking dashboard UI brief","audience":"startup founders","platform":"mobile","constraints":["accessible contrast","responsive"]}'
 ```
+
+### Combined workflow preparation
+
+```bash
+curl -X POST http://127.0.0.1:8000/workflow/prepare \
+  -H "Content-Type: application/json" \
+  -d '{"request":"Create a launch social post","headline":"Launch day","subheading":"A clear message for the audience."}'
+```
+
+This returns a plan and a paste-ready Figma plugin spec. It does not create external assets. Use the spec in the local Figma plugin after reviewing it.
+
+### Canva template autofill
+
+Once Canva OAuth is configured and you have an eligible plan plus a brand template with tagged fields, call `POST /connectors/canva/autofills` with `user_approved: true`. Example field names below are placeholders; use the exact names from your own template dataset:
+
+```json
+{
+  "brand_template_id": "YOUR_TEMPLATE_ID",
+  "title": "Campaign design",
+  "user_approved": true,
+  "data": {
+    "HEADLINE": {"type": "text", "text": "A new launch"},
+    "SUBHEAD": {"type": "text", "text": "Made for your audience"}
+  }
+}
+```
+
+The API returns an asynchronous job ID. Poll `GET /connectors/canva/autofills/{job_id}` until the job is `success` or `failed`, then export the created design if needed. Canva autofill may require a Pro, Teams, or Enterprise plan and correct scopes.
 
 ### MCP server
 
