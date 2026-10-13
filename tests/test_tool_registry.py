@@ -57,3 +57,15 @@ def test_catalog_sync_rejects_unknown_sources():
 
     with pytest.raises(ValueError):
         asyncio.run(sync_catalog_source("https://attacker.invalid/feed.json"))
+
+
+def test_app_catalog_includes_genoffice_and_artcraft_apps():
+    from design_agent_hub.tool_registry import list_tool_catalog
+
+    result = list_tool_catalog(kind="app")
+    names = {item["name"] for item in result["items"]["app"]}
+    assert "GenOffice suite" in names
+    assert "PhotoCraft" in names
+    assert "FigCraft" in names
+    assert "GridCraft" in names
+    assert result["catalog_is_metadata_not_installation"] is True
