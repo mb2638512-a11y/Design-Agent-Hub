@@ -21,3 +21,12 @@ def test_router_never_claims_connection_without_input():
     result = recommend_tools("Create a YouTube thumbnail")
     assert all(item["connection_status"] == "not_verified" for item in result["candidates"])
     assert result["execution_status"] == "recommendation_only"
+
+
+def test_free_open_source_fallbacks_are_available():
+    photo = recommend_tools("Retouch a product photo and remove the background")
+    assert "gimp" in [item["id"] for item in photo["candidates"]]
+    vector = recommend_tools("Create an SVG icon set and vector illustration")
+    assert "inkscape" in [item["id"] for item in vector["candidates"]]
+    three_d = recommend_tools("Make a 3D product render")
+    assert "blender" in [item["id"] for item in three_d["candidates"]]
