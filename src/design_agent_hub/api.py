@@ -24,12 +24,12 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
-from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog\nfrom .catalog_sync import sync_catalog_source
 
 app = FastAPI(
-    title="Design Agent Hub",
+    title="NOVA — Networked Orchestration & Visual Automation",
     version=__version__,
-    description="Provider-neutral design workflow planner with optional Canva/Figma adapters.",
+    description="NOVA: provider-neutral design and social workflow agent with optional Canva/Figma adapters.",
 )
 
 _cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000").split(",") if origin.strip()]
@@ -110,7 +110,7 @@ async def require_api_token(authorization: str | None = Header(default=None)) ->
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "Design Agent Hub", "version": __version__}
+    return {"status": "ok", "service": "NOVA — Networked Orchestration & Visual Automation", "version": __version__}
 
 
 @app.get("/agents", dependencies=[Depends(require_api_token)])
@@ -383,3 +383,4 @@ async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, obj
 async def tools_catalog_sources() -> dict[str, object]:
     """List optional upstream MCP/API metadata feeds without fetching them."""
     return {"sources": list_catalog_sources(), "fetches_external_data": False}
+\n\n@app.get("/tools/catalog/sync", dependencies=[Depends(require_api_token)])\nasync def sync_upstream_catalog(source_id: str) -> dict[str, object]:\n    """Explicitly fetch one allowlisted upstream feed as bounded metadata; no code is installed or executed."""\n    try:\n        return await sync_catalog_source(source_id)\n    except ValueError as exc:\n        raise HTTPException(status_code=422, detail=str(exc)) from exc\n    except RuntimeError as exc:\n        raise HTTPException(status_code=502, detail=str(exc)) from exc\n
