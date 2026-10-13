@@ -51,11 +51,18 @@ class SocialMediaSpecialistAgent:
 
     async def run(self, task: str) -> dict[str, object]:
         platforms = self._detect_platforms(task) or list(self.platforms)
+        normalized = task.casefold()
+        requested_mode = "end_to_end_workflow" if any(
+            phrase in normalized for phrase in ("end-to-end", "end to end", "automate", "manage everything", "full campaign")
+        ) else "focused_task"
+        requested_scope = "multi_platform" if len(platforms) > 1 else "single_platform_or_all_platforms"
         return {
             "agent_id": self.id,
             "agent_name": self.name,
             "result_type": "social_media_operations_plan",
             "execution_status": "plan_only_accounts_not_changed",
+            "requested_mode": requested_mode,
+            "requested_scope": requested_scope,
             "task": task,
             "target_platforms": platforms,
             "account_operations": [
@@ -67,6 +74,29 @@ class SocialMediaSpecialistAgent:
                 {"step": "Community", "actions": ["Monitor comments and inboxes only when permissions allow.", "Escalate sensitive, legal, safety, refund, and account-security issues to a human.", "Do not auto-spam, mass-follow, fake engagement, or bypass platform limits."]},
                 {"step": "Analytics", "actions": ["Collect available reach, views, clicks, watch time, engagement, and conversion metrics.", "Compare results by platform and campaign, then recommend experiments.", "Respect platform retention rules and user privacy."]},
             ],
+            "campaign_blueprint": {
+                "strategy": [
+                    "Define one measurable goal per campaign (awareness, qualified traffic, leads, sales, or community support).",
+                    "Identify target audience, language, brand voice, offer, proof points, and prohibited claims before drafting.",
+                    "Adapt each creative to the native format and audience of its platform instead of copying identical posts everywhere.",
+                ],
+                "content_package": [
+                    "Create a content pillar map and a platform-specific calendar.",
+                    "Draft multiple hooks, captions, calls to action, and accessible alt text for each approved concept.",
+                    "Provide creative briefs, short-video scripts, thumbnail concepts, and repurposing notes where relevant.",
+                    "Mark unsupported facts, missing links, rights questions, and unverified claims for review rather than inventing them.",
+                ],
+                "publishing_operations": [
+                    "Use an idempotent queue with scheduled local time, timezone, status, retry count, and provider post ID.",
+                    "Preview the exact platform-specific payload before approval.",
+                    "After publishing, verify the provider response and store the resulting URL or a clear failure reason.",
+                ],
+                "optimization_loop": [
+                    "Compare performance against a baseline and the campaign goal, not vanity metrics alone.",
+                    "Recommend one or two controlled experiments at a time, such as hook, creative format, or posting window.",
+                    "Turn measured results into the next content-calendar revision; do not promise viral outcomes.",
+                ],
+            },
             "approval_gates": [
                 "Explicit account-owner approval before creating or modifying pages/channels.",
                 "Explicit approval before publishing, scheduling, messaging, deleting, or spending ad budget.",
@@ -86,8 +116,13 @@ class SocialMediaSpecialistAgent:
                 "Add an approval dashboard for posts and account changes.",
                 "Run end-to-end tests against test accounts before enabling production writes.",
             ],
+            "capability_policy": {
+                "default_behavior": "Attempt every safe, relevant part of the requested workflow and return concrete drafts, checklists, and machine-readable next steps instead of stopping at a generic limitation.",
+                "blocked_action_behavior": "If a platform API, permission, or policy prevents an action, identify the exact dependency and provide the closest compliant alternative.",
+                "autonomy": "May prepare plans and content drafts without extra approval; must not perform consequential external writes without authorization and any required human approval.",
+            },
             "limitations": [
-                "This agent currently creates an operations plan; it does not log into accounts, create pages, publish posts, or read analytics.",
+                "This agent currently creates an operations plan and campaign blueprint; it does not log into accounts, create pages, publish posts, or read analytics.",
                 "Platform APIs differ: some account/page creation and messaging actions are unavailable or require app review/business eligibility.",
             ],
         }
