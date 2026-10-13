@@ -1,3 +1,7 @@
+"""Tests for the manager and extensible agent registry."""
+
+import asyncio
+
 import pytest
 
 from design_agent_hub.manager import AgentRegistry, MainManagerAgent
@@ -24,19 +28,17 @@ def test_manager_registers_design_agent_by_default():
     assert status["agents"][0]["id"] == "design"
 
 
-@pytest.mark.asyncio
-async def test_manager_delegates_design_task():
+def test_manager_delegates_design_task():
     manager = MainManagerAgent()
-    result = await manager.dispatch("Create an Instagram post design")
+    result = asyncio.run(manager.dispatch("Create an Instagram post design"))
     assert result["status"] == "delegated"
     assert result["selected_agent"]["id"] == "design"
     assert result["result"]["result_type"] == "design_plan"
 
 
-@pytest.mark.asyncio
-async def test_manager_reports_when_no_agent_matches():
+def test_manager_reports_when_no_agent_matches():
     manager = MainManagerAgent()
-    result = await manager.dispatch("Calculate orbital trajectory")
+    result = asyncio.run(manager.dispatch("Calculate orbital trajectory"))
     assert result["status"] == "no_matching_agent"
 
 
