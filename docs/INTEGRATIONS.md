@@ -88,3 +88,12 @@ Copy `.env.example` to `.env`, generate a strong random `API_BEARER_TOKEN`, then
 ## 9. OAuth and account setup status
 
 The provider adapters currently accept an authorized access token from the private environment. They do not yet implement a complete multi-user OAuth callback/token-refresh service or persistent encrypted token vault. Create your own developer apps, configure only the scopes you need, and never commit tokens. For a production multi-user service, add encrypted token storage and refresh/revocation handling before offering account connections to external users.
+
+
+## 10. Social platform operations
+
+The Social Media Agent is available through `POST /manager/dispatch`. It can prepare an operating plan for accounts that you own or are authorized to manage, including platform-specific profiles, a content calendar, approval queues, moderation guidelines, and analytics.
+
+The current agent does not sign in, create pages, publish posts, reply to messages, or fetch analytics. To enable those actions, implement and review one official platform integration at a time. Use each platform's current developer documentation, OAuth, minimum required scopes, encrypted token storage, account-owner authorization, audit logs, rate limits, and an approval step before public writes. Page/channel creation is platform-dependent and may require a manual official UI step or app review.
+
+Never store account passwords in this project or commit access tokens. Do not automate fake engagement, unsolicited bulk messaging, or actions that bypass platform limits.
