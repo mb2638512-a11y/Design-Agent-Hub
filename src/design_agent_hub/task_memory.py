@@ -58,6 +58,11 @@ def recent_tasks(limit: int = 10) -> dict[str, Any]:
         return {"enabled": True, "tasks": []}
     with sqlite3.connect(path, timeout=3.0) as connection:
         connection.row_factory = sqlite3.Row
+        exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_memory'"
+        ).fetchone()
+        if not exists:
+            return {"enabled": True, "tasks": []}
         rows = connection.execute(
             "SELECT id, created_at, task, result_summary FROM task_memory ORDER BY id DESC LIMIT ?",
             (safe_limit,),
