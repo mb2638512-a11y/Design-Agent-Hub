@@ -1,6 +1,6 @@
 # Design Agent Hub
 
-A provider-agnostic agent hub for design workflows, coding plans, research briefs, QA checklists, and delivery handoffs. It exposes a REST API and MCP tools and has optional official Canva/Figma adapters.
+A **frontend-free MCP server** that gives compatible AI agents extra tools for design workflows, coding plans, research, social-platform planning, QA, and delivery. MCP is the primary interface; an optional REST API is also available.
 
 > **Status: early MVP.** The manager and seven specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists, deterministic SVG and HTML starter assets, and structured starter copy; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma and social platform actions still require credentials, account permissions, eligible plans, and end-to-end tests.
 
@@ -35,11 +35,9 @@ Human / automation / compatible AI client
 
 Routing uses keyword/capability scoring, not autonomous reasoning. Complex cross-domain tasks can run up to three domain specialists plus Quality and Delivery in parallel. Results are proposals, not proof of external actions.
 
-## Public web workspace
+## MCP first — no frontend
 
-A responsive browser interface lives in [`web/index.html`](web/index.html). The GitHub Pages workflow publishes it when enabled in repository settings. It supports a local-only demo, connection to an API you deploy, manager dispatch, and starter SVG/ZIP downloads. The demo is clearly labeled and does not contact an AI model or social accounts.
-
-For a public deployment, follow [the deployment guide](docs/DEPLOYMENT.md). Each user or community deploys their own API; this project does not expose a shared backend or shared secret. The API supports explicit CORS origins through `CORS_ORIGINS`, and production mode requires `API_BEARER_TOKEN`.
+There is no web UI to open. Add this server to an MCP-compatible client and the client can discover and call its tools. The server exposes manager dispatch, specialist discovery, design-job search, workflow planning, Canva/Figma operations (when credentials are configured), and a social-platform capability catalog. Read [the MCP setup guide](docs/DEPLOYMENT.md) for client configuration. MCP tools do not magically grant provider access: Canva/Figma credentials, provider scopes, account permissions, and human approval are still required for protected actions.
 
 ## Quick start
 
@@ -63,7 +61,7 @@ Open `http://127.0.0.1:8000/docs`. In production, set `APP_ENV=production` and a
 - `POST /artifacts/download` with `{"task":"Create an Instagram post","file_format":"svg"}` or `{"task":"Create a landing page","file_format":"html"}` returns a downloadable starter file.
 - `POST /artifacts/package` with `{"task":"Create a launch campaign"}` returns a ZIP with editable HTML/SVG starters, a content brief, README, and manifest.
 - A cross-domain request such as `{"task":"Research competitors, build a website, test accessibility, and deliver the complete package"}` triggers a bounded multi-agent workflow.
-- MCP clients can use `list_registered_agents` and `manager_dispatch_task`.
+- MCP clients can use `list_registered_agents`, `manager_dispatch_task`, `list_design_categories`, `search_design_jobs`, `recommend_design_tool`, `plan_design_workflow`, `prepare_design_workflow`, and `list_supported_social_platforms`; Canva/Figma tools are available when configured.
 
 ## Design output
 
