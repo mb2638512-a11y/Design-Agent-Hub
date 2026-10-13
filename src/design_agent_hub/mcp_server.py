@@ -68,5 +68,30 @@ async def canva_list_designs(limit: int = 20) -> str:
     return json.dumps(result, ensure_ascii=False)
 
 
+@mcp.tool()
+async def canva_create_design(title: str, width: int, height: int, user_approved: bool = False) -> str:
+    """Create a blank Canva design. Set user_approved=true only after the human explicitly approves creation."""
+    if not user_approved:
+        return json.dumps({"status": "approval_required", "message": "Ask the user to approve creating a Canva design, then call again with user_approved=true."})
+    result = await CanvaConnector().create_design(title, width, height)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@mcp.tool()
+async def canva_start_export(design_id: str, file_format: str = "png", user_approved: bool = False) -> str:
+    """Start a Canva export. Ask the human first because exports may consume provider quota."""
+    if not user_approved:
+        return json.dumps({"status": "approval_required", "message": "Ask the user to approve the export, then call again with user_approved=true."})
+    result = await CanvaConnector().start_export(design_id, file_format)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@mcp.tool()
+async def canva_get_export(export_id: str) -> str:
+    """Check the status/result of an existing Canva export job."""
+    result = await CanvaConnector().get_export(export_id)
+    return json.dumps(result, ensure_ascii=False)
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
