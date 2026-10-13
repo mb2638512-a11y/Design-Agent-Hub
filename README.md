@@ -37,7 +37,7 @@ Python 3.11+ recommended.
 
 ```bash
 python -m venv .venv
-# Windows: .venv\\Scripts\\activate
+# Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env  # Windows PowerShell: Copy-Item .env.example .env
