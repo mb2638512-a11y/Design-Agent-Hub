@@ -1,3 +1,6 @@
+import io
+import zipfile
+
 from fastapi.testclient import TestClient
 
 from design_agent_hub.api import app
@@ -133,3 +136,14 @@ def test_artifact_download_returns_html_and_rejects_other_formats():
         json={"task": "Create a landing page", "file_format": "exe"},
     )
     assert invalid.status_code == 422
+
+
+def test_artifact_package_contains_editable_files_and_manifest():
+    response = client.post("/artifacts/package", json={"task": "Create a launch campaign"})
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/zip")
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        names = set(archive.namelist())
+        assert {"index.html", "social-post.svg", "content-brief.md", "README.txt", "manifest.json"} <= names
+        assert "<!doctype html>" in archive.read("index.html").decode().lower()
+        assert "<svg" in archive.read("social-post.svg").decode()
