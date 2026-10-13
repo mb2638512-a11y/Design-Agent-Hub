@@ -13,6 +13,7 @@ from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .figma_spec import FigmaSpecRequest, build_figma_spec
+from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
@@ -37,6 +38,10 @@ class WorkflowPrepareRequest(BaseModel):
     accent: str = Field(default="#2563EB", pattern=r"^#[0-9a-fA-F]{6}$")
     foreground: str = Field(default="#0F172A", pattern=r"^#[0-9a-fA-F]{6}$")
     secondary: str = Field(default="#475569", pattern=r"^#[0-9a-fA-F]{6}$")
+
+
+class ManagerDispatchRequest(BaseModel):
+    task: str = Field(min_length=3, max_length=5000)
 
 
 class CanvaCreateRequest(BaseModel):
@@ -80,6 +85,18 @@ async def require_api_token(authorization: str | None = Header(default=None)) ->
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "Design Agent Hub", "version": __version__}
+
+
+@app.get("/agents", dependencies=[Depends(require_api_token)])
+async def list_agents() -> dict[str, object]:
+    """List the manager and registered specialist agents."""
+    return main_manager.status()
+
+
+@app.post("/manager/dispatch", dependencies=[Depends(require_api_token)])
+async def manager_dispatch(payload: ManagerDispatchRequest) -> dict[str, object]:
+    """Let the main manager select a registered specialist; current agents plan only."""
+    return await main_manager.dispatch(payload.task)
 
 
 @app.get("/catalog", dependencies=[Depends(require_api_token)])
