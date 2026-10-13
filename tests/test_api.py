@@ -73,3 +73,11 @@ def test_workflow_prepare_returns_plan_and_figma_spec(monkeypatch):
     assert body["execution_status"] == "plan_only"
     assert body["plan"]["steps"]
     assert body["figma_plugin_spec"]["frames"][0]["elements"]
+
+
+def test_production_mode_requires_api_token(monkeypatch):
+    monkeypatch.delenv("API_BEARER_TOKEN", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+    response = client.get("/catalog")
+    assert response.status_code == 503
+    assert "API_BEARER_TOKEN" in response.json()["detail"]
