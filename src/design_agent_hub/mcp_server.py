@@ -93,5 +93,26 @@ async def canva_get_export(export_id: str) -> str:
     return json.dumps(result, ensure_ascii=False)
 
 
+
+@mcp.tool()
+async def canva_create_autofill_job(
+    brand_template_id: str,
+    data: dict,
+    title: str = "",
+    user_approved: bool = False,
+) -> str:
+    """Create a Canva design by filling tagged brand-template fields. Requires eligible Canva plan and user approval."""
+    if not user_approved:
+        return json.dumps({"status": "approval_required", "message": "Ask the user to approve creating a design from this Canva template, then call again with user_approved=true."})
+    result = await CanvaConnector().create_autofill_job(brand_template_id, data, title or None)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@mcp.tool()
+async def canva_get_autofill_job(job_id: str) -> str:
+    """Check an existing Canva template-autofill job; successful jobs include the created design."""
+    result = await CanvaConnector().get_autofill_job(job_id)
+    return json.dumps(result, ensure_ascii=False)
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
