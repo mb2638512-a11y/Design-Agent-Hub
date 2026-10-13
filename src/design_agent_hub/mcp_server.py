@@ -11,6 +11,7 @@ from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .planner import PlanRequest, create_plan
 from .figma_spec import FigmaSpecRequest, build_figma_spec
+from .provider_router import recommend_tools
 
 mcp = FastMCP("design-agent-hub")
 
@@ -25,6 +26,12 @@ def list_design_categories() -> str:
 def search_design_jobs(query: str) -> str:
     """Search the design job catalog by category or job name."""
     return json.dumps({"query": query, "matches": search_catalog(query)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def recommend_design_tool(task: str, connected_providers: list[str] | None = None) -> str:
+    """Recommend the best tool for a design task using a free-first policy. Does not execute provider actions."""
+    return json.dumps(recommend_tools(task, connected_providers), ensure_ascii=False)
 
 
 @mcp.tool()
