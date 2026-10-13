@@ -44,7 +44,8 @@ If your client does not support `cwd`, use the absolute path to that environment
 ## 3. MCP tools
 
 - `list_registered_agents` — discover the manager and specialists.
-- `manager_dispatch_task` — route a task to a specialist workflow.
+- `manager_dispatch_task` — build a task plan, route to specialists, apply structural output QA, and report partial failures.
+- `manager_recent_task_memory` and `manager_clear_task_memory` — inspect or clear compact local task history when opt-in memory is enabled; deletion requires approval.
 - `list_design_categories` and `search_design_jobs` — discover supported design jobs.
 - `recommend_design_tool` — choose a tool using free-first recommendations.
 - `plan_design_workflow` and `prepare_design_workflow` — prepare a plan/spec.
@@ -53,12 +54,13 @@ If your client does not support `cwd`, use the absolute path to that environment
 
 ## 4. Configure provider credentials only if needed
 
-Copy `.env.example` to `.env` and add only credentials for providers you personally control and are authorized to access. Never commit `.env` or paste secrets into prompts. The server does not provide shared accounts, shared OAuth tokens, or free paid-plan access.
+Copy `.env.example` to `.env` and add only credentials for providers you personally control and are authorized to access. Set `MODEL_BASE_URL`, `MODEL_API_KEY`, and `MODEL_NAME` for an optional primary OpenAI-compatible planner; optionally configure `MODEL_FALLBACK_BASE_URL`, `MODEL_FALLBACK_API_KEY`, and `MODEL_FALLBACK_NAME` for failover. If both fail or are unset, deterministic planning remains available. Task memory is off by default; set `MANAGER_MEMORY_ENABLED=true` only if you want to retain up to 100 compact local task summaries, and keep `MANAGER_MEMORY_PATH` on a private disk. Never commit `.env`, database files, or paste secrets into prompts. The server does not provide shared accounts, shared OAuth tokens, or free paid-plan access.
 
 ## Current limits and safety
 
 - The server is MCP-first and has no frontend. A REST API remains available as an optional interface.
-- Specialist routing is deterministic capability matching, not a separate autonomous frontier model.
+- Specialist routing is deterministic capability matching; the optional model endpoint currently improves the design planner, not the manager's routing logic.
+- Manager output QA checks result structure and can repair missing agent identity metadata; it does not prove factual accuracy, code correctness, or design quality.
 - Some tools produce plans or starter specs rather than completing every task end-to-end.
 - Social platforms are currently a capability/readiness catalog, not connected accounts; OAuth, publishing, comments, scheduling, and analytics integrations still need provider-specific implementation and approval.
 - Do not expose a remote MCP endpoint publicly without authentication and transport security. Local stdio is the default and safest setup.
