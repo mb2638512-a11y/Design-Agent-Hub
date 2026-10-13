@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import hmac
 import os
+import re
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from . import __version__
@@ -14,6 +15,7 @@ from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .figma_spec import FigmaSpecRequest, build_figma_spec
 from .manager import manager as main_manager
+from .agents.design_agent import DesignSpecialistAgent
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
@@ -43,6 +45,10 @@ class WorkflowPrepareRequest(BaseModel):
 class ManagerDispatchRequest(BaseModel):
     task: str = Field(min_length=3, max_length=5000)
 
+
+class ArtifactDownloadRequest(BaseModel):
+    task: str = Field(min_length=3, max_length=1000)
+    file_format: str = Field(pattern=r"^(svg|html)$")
 
 class CanvaCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
@@ -98,6 +104,24 @@ async def manager_dispatch(payload: ManagerDispatchRequest) -> dict[str, object]
     """Let the main manager select a registered specialist; current agents plan only."""
     return await main_manager.dispatch(payload.task)
 
+
+@app.post("/artifacts/download", dependencies=[Depends(require_api_token)])
+async def download_starter_artifact(request: ArtifactDownloadRequest) -> Response:
+    """Return an editable starter SVG or HTML file as a download; no external service is called."""
+    safe_name = re.sub(r"[^a-z0-9]+", "-", request.task.casefold()).strip("-")[:48] or "starter-asset"
+    if request.file_format == "svg":
+        content = DesignSpecialistAgent._make_svg(request.task)
+        media_type = "image/svg+xml; charset=utf-8"
+        filename = f"{safe_name}.svg"
+    else:
+        content = DesignSpecialistAgent._make_html(request.task)
+        media_type = "text/html; charset=utf-8"
+        filename = f"{safe_name}.html"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": "attachment; filename=" + chr(34) + filename + chr(34)},
+    )
 
 @app.get("/catalog", dependencies=[Depends(require_api_token)])
 async def catalog() -> dict[str, object]:
