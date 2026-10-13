@@ -22,6 +22,7 @@ from .figma_spec import FigmaSpecRequest, build_figma_spec
 from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
+from .social_platforms import list_social_platforms
 
 app = FastAPI(
     title="Design Agent Hub",
@@ -325,6 +326,12 @@ async def canva_get_export(export_id: str) -> dict[str, object]:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Canva export status request failed; check OAuth scopes and export ID.") from exc
+
+
+@app.get("/social/platforms", dependencies=[Depends(require_api_token)])
+async def social_platform_catalog() -> dict[str, object]:
+    """List supported social platforms and their setup constraints; no live accounts are accessed."""
+    return list_social_platforms()
 
 
 @app.get("/connectors/status", dependencies=[Depends(require_api_token)])
