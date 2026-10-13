@@ -374,8 +374,8 @@ async def tools_catalog(kind: str | None = None, no_key_only: bool = False) -> d
 
 @app.get("/tools/catalog/search", dependencies=[Depends(require_api_token)])
 async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, object]:
-    if kind and kind not in {"builtin", "mcp", "api"}:
-        raise HTTPException(status_code=422, detail="kind must be builtin, mcp, or api")
+    if kind and kind not in {"builtin", "mcp", "api", "app"}:
+        raise HTTPException(status_code=422, detail="kind must be builtin, mcp, api, or app")
     return {"query": q, "kind": kind or "all", "matches": search_tool_catalog(q, kind)}
 
 
