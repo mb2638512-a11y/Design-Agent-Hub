@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font: 13px Inter, system-ui, sans-serif; margin: 0; padding: 16px; color: var(--figma-color-text); background: var(--figma-color-bg); }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    p { line-height: 1.45; color: var(--figma-color-text-secondary); }
+    textarea { box-sizing: border-box; width: 100%; height: 365px; padding: 10px; resize: vertical; font: 12px ui-monospace, monospace; color: var(--figma-color-text); background: var(--figma-color-bg-secondary); border: 1px solid var(--figma-color-border); border-radius: 8px; }
+    button { margin-top: 12px; padding: 10px 12px; width: 100%; border: 0; border-radius: 8px; color: white; background: #5b5bd6; font-weight: 600; cursor: pointer; }
+    #status { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 12px; }
+    .hint { font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Design Agent Hub</h1>
+  <p>Paste a JSON design spec from your agent. This plugin creates native, editable Figma layers in the current file. Review the spec before running it.</p>
+  <textarea id="spec" spellcheck="false">{
+  "frames": [
+    {
+      "name": "Social Post - Sample",
+      "width": 1080,
+      "height": 1080,
+      "background": "#F8FAFC",
+      "elements": [
+        {"type":"text","name":"Eyebrow","text":"DESIGN AGENT HUB","x":72,"y":80,"width":850,"height":36,"fontSize":20,"weight":"medium","color":"#2563EB"},
+        {"type":"text","name":"Headline","text":"Ideas into editable designs","x":72,"y":180,"width":850,"height":180,"fontSize":64,"weight":"medium","color":"#0F172A"},
+        {"type":"rect","name":"Accent Bar","x":72,"y":400,"width":150,"height":12,"color":"#2563EB","radius":6},
+        {"type":"text","name":"Subheading","text":"Build, review, and refine with your workflow agent.","x":72,"y":450,"width":850,"height":100,"fontSize":28,"color":"#475569"}
+      ]
+    }
+  ]
+}</textarea>
+  <button id="build">Create editable design in Figma</button>
+  <div id="status" class="hint" role="status">Ready. Running the plugin creates layers in your current Figma file.</div>
+  <script>
+    const specEl = document.getElementById("spec");
+    const statusEl = document.getElementById("status");
+    document.getElementById("build").addEventListener("click", () => {
+      try {
+        const spec = JSON.parse(specEl.value);
+        statusEl.textContent = "Creating layers…";
+        parent.postMessage({ pluginMessage: { type: "build", spec } }, "*");
+      } catch (error) {
+        statusEl.textContent = "Invalid JSON: " + error.message;
+      }
+    });
+    window.onmessage = (event) => {
+      const message = event.data && event.data.pluginMessage;
+      if (!message || message.type !== "result") return;
+      statusEl.textContent = message.ok
+        ? "Done. Created " + message.result.frames + " frame(s) and " + message.result.nodes + " total nodes."
+        : "Could not create design: " + message.error;
+    };
+  </script>
+</body>
+</html>
