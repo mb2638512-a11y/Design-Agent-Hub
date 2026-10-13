@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import hmac
+import io
+import json
 import os
 import re
+import zipfile
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from pydantic import BaseModel, Field
@@ -16,6 +19,7 @@ from .connectors.figma import FigmaConnector
 from .figma_spec import FigmaSpecRequest, build_figma_spec
 from .manager import manager as main_manager
 from .agents.design_agent import DesignSpecialistAgent
+from .agents.content_agent import ContentSpecialistAgent
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
@@ -49,6 +53,10 @@ class ManagerDispatchRequest(BaseModel):
 class ArtifactDownloadRequest(BaseModel):
     task: str = Field(min_length=3, max_length=1000)
     file_format: str = Field(pattern=r"^(svg|html)$")
+
+class ArtifactPackageRequest(BaseModel):
+    task: str = Field(min_length=3, max_length=1000)
+
 
 class CanvaCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
@@ -121,6 +129,43 @@ async def download_starter_artifact(request: ArtifactDownloadRequest) -> Respons
         content=content,
         media_type=media_type,
         headers={"Content-Disposition": "attachment; filename=" + chr(34) + filename + chr(34)},
+    )
+
+@app.post("/artifacts/package", dependencies=[Depends(require_api_token)])
+async def download_artifact_package(request: ArtifactPackageRequest) -> Response:
+    """Bundle editable starter assets and a manifest into a ZIP download."""
+    safe_name = re.sub(r"[^a-z0-9]+", "-", request.task.casefold()).strip("-")[:48] or "starter-package"
+    copy = ContentSpecialistAgent()._starter_copy(request.task)
+    files = {
+        "index.html": DesignSpecialistAgent._make_html(request.task),
+        "social-post.svg": DesignSpecialistAgent._make_svg(request.task),
+        "content-brief.md": (
+            "# Content starter\n\n"
+            f"## Headline\n\n{copy['headline']}\n\n"
+            f"## Supporting copy\n\n{copy['supporting_copy']}\n\n"
+            f"## Call to action\n\n{copy['call_to_action']}\n\n"
+            f"> {copy['disclosure']}\n"
+        ),
+        "README.txt": (
+            "Design Agent Hub starter package\n"
+            "Contains editable HTML and SVG starters plus draft copy.\n"
+            "These are templates, not finished client-approved deliverables.\n"
+            "Review accessibility, claims, links, licenses, and brand assets before use.\n"
+        ),
+        "manifest.json": json.dumps(
+            {"task": request.task, "files": ["index.html", "social-post.svg", "content-brief.md", "README.txt"], "external_actions_performed": False},
+            ensure_ascii=False,
+            indent=2,
+        ),
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for filename, file_content in files.items():
+            archive.writestr(filename, file_content)
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=" + chr(34) + safe_name + ".zip" + chr(34)},
     )
 
 @app.get("/catalog", dependencies=[Depends(require_api_token)])
