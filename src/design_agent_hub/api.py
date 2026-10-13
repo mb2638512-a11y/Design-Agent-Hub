@@ -51,7 +51,9 @@ class FigmaExportRequest(BaseModel):
 async def require_api_token(authorization: str | None = Header(default=None)) -> None:
     expected = os.getenv("API_BEARER_TOKEN", "").strip()
     if not expected:
-        return  # Local development only; configure a token before exposing the API.
+        if os.getenv("APP_ENV", "development").lower() != "development":
+            raise HTTPException(status_code=503, detail="API_BEARER_TOKEN must be configured outside development mode")
+        return  # Local development only; never use this mode on a public network.
     supplied = (authorization or "").removeprefix("Bearer ").strip()
     if not hmac.compare_digest(supplied, expected):
         raise HTTPException(status_code=401, detail="Invalid or missing bearer token")
