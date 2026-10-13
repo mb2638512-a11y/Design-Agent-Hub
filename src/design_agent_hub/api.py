@@ -13,13 +13,13 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from . import __version__
+from .agents.content_agent import ContentSpecialistAgent
+from .agents.design_agent import DesignSpecialistAgent
 from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .figma_spec import FigmaSpecRequest, build_figma_spec
 from .manager import manager as main_manager
-from .agents.design_agent import DesignSpecialistAgent
-from .agents.content_agent import ContentSpecialistAgent
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
