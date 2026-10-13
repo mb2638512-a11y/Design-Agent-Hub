@@ -66,6 +66,9 @@ class MainManagerAgent:
     _complex_markers = (
         "end-to-end", "end to end", "complete package", "full project",
         "from start to finish", "launch the whole", "entire workflow",
+        "automate", "across all", "manage everything", "whole campaign",
+        "research and create", "design and build", "create and publish",
+        "plan and execute", "audit and fix", "build and test",
     )
     _support_agents = ("quality", "delivery")
 
@@ -89,8 +92,14 @@ class MainManagerAgent:
             "manager_name": self.name,
             "registered_agent_count": len(agents),
             "agents": agents,
-            "routing_mode": "capability_keyword_scoring",
+            "routing_mode": "capability_keyword_scoring_with_bounded_collaboration",
             "multi_agent_workflows": True,
+            "operating_principles": [
+                "Prefer useful progress over unnecessary refusal: complete safe parts and explain only the blocked part.",
+                "For multi-domain tasks, involve the relevant specialists plus quality and delivery review.",
+                "Distinguish plans, generated artifacts, and verified external actions; never claim an action ran unless a tool confirms it.",
+                "Ask for approval only before consequential external writes, publication, deletion, messaging, or spending.",
+            ],
         }
 
     async def dispatch(self, task: str) -> dict[str, object]:
@@ -176,6 +185,13 @@ class MainManagerAgent:
             "task": cleaned,
             "workflow_mode": "parallel_specialists_with_qa_and_delivery",
             "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
+            "orchestration": {
+                "selection_strategy": "highest capability score, with up to three domain specialists",
+                "quality_review": "quality specialist included when registered",
+                "delivery_handoff": "delivery specialist included when registered",
+                "result_contract": "Each specialist result is labeled completed or failed; completed means the specialist returned a result, not that an external action was verified.",
+                "next_step": "Review specialist outputs, resolve failures, then request any consequential external action with explicit authorization.",
+            },
             "team_count": len(team_results),
             "successful_agents": sum(item["status"] == "completed" for item in team_results),
             "failed_agents": sum(item["status"] == "failed" for item in team_results),
