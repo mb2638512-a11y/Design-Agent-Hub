@@ -13,7 +13,7 @@ The interactive API docs are at `http://127.0.0.1:8000/docs`.
 
 ## 2. Connect Penpot (free-first UI/UX option)
 
-Penpot's official MCP integration can read and modify design files, layers, components, styles, and tokens. The Design Agent Hub router recommends Penpot for UI/UX, dashboards, wireframes, prototypes, and design systems, but it does not silently connect to or control Penpot.
+Penpot's official MCP integration can read and modify design files, layers, components, styles, and tokens. The Design Agent Hub router recommends Penpot for UI/UX, dashboards, wireframes, prototypes, and design systems, but it does not silently connect to or control Penpot. Follow the current [official MCP instructions](https://help.penpot.app/mcp/): enable MCP under Account → Integrations, generate and privately store the key, copy the full server URL, add it to the trusted MCP client, then open a Penpot file and use File → MCP Server → Connect. Keep the Penpot tab active while tasks run.
 
 1. Open [Penpot MCP documentation](https://help.penpot.app/mcp/).
 2. In Penpot, open **Account → Integrations → MCP Server**, enable it if available, and generate/copy the MCP URL. Treat its tokenized URL as a secret.
@@ -61,6 +61,7 @@ Tools cover catalog/search/planning, authorized Figma file reads and node-image 
 - `GET /health`
 - `GET /catalog`
 - `GET /catalog/search?q=thumbnail`
+- `POST /tools/recommend` with `{"task":"Create a responsive SaaS dashboard"}` (free-first provider routing; no external writes)
 - `POST /plan`
 - `GET /connectors/status`
 - `POST /workflow/prepare` with a task brief and optional visual copy; returns a plan plus a paste-ready Figma spec without writing to external services
