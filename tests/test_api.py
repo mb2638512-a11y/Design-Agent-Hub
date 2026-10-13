@@ -26,6 +26,7 @@ def test_canva_write_requires_explicit_approval(monkeypatch):
 
 def test_canva_create_validates_dimensions_before_network():
     import asyncio
+
     import pytest
 
     connector = CanvaConnector(token="")
