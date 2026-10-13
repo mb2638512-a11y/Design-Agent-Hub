@@ -6,6 +6,7 @@ import asyncio
 
 from .agents.base import SpecialistAgent
 from .agents.coding_agent import CodingSpecialistAgent
+from .agents.content_agent import ContentSpecialistAgent
 from .agents.delivery_agent import DeliverySpecialistAgent
 from .agents.design_agent import DesignSpecialistAgent
 from .agents.quality_agent import QualitySpecialistAgent
@@ -72,6 +73,7 @@ class MainManagerAgent:
             [
                 DesignSpecialistAgent(),
                 CodingSpecialistAgent(),
+                ContentSpecialistAgent(),
                 ResearchSpecialistAgent(),
                 QualitySpecialistAgent(),
                 DeliverySpecialistAgent(),
@@ -119,7 +121,16 @@ class MainManagerAgent:
             or len(domain_matches) >= 2
         )
         if not complex_task:
-            result = await primary.run(cleaned)
+            try:
+                result = await primary.run(cleaned)
+            except Exception as exc:  # noqa: BLE001 - isolate specialist failures from the API
+                return {
+                    "status": "agent_failed",
+                    "manager": self.name,
+                    "task": cleaned,
+                    "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
+                    "error": f"{type(exc).__name__}: specialist failed; inspect server logs for details.",
+                }
             return {
                 "status": "delegated",
                 "manager": self.name,
@@ -139,11 +150,24 @@ class MainManagerAgent:
             if support is not None and all(item.id != support.id for item in selected):
                 selected.append(support)
 
-        outputs = await asyncio.gather(*(agent.run(cleaned) for agent in selected))
-        team_results = [
-            {"agent": {"id": agent.id, "name": agent.name}, "result": output}
-            for agent, output in zip(selected, outputs, strict=True)
-        ]
+        outputs = await asyncio.gather(
+            *(agent.run(cleaned) for agent in selected),
+            return_exceptions=True,
+        )
+        team_results = []
+        for agent, output in zip(selected, outputs, strict=True):
+            if isinstance(output, BaseException):
+                team_results.append({
+                    "agent": {"id": agent.id, "name": agent.name},
+                    "status": "failed",
+                    "error": f"{type(output).__name__}: specialist failed; inspect server logs for details.",
+                })
+            else:
+                team_results.append({
+                    "agent": {"id": agent.id, "name": agent.name},
+                    "status": "completed",
+                    "result": output,
+                })
         return {
             "status": "multi_agent_workflow",
             "manager": self.name,
@@ -151,6 +175,8 @@ class MainManagerAgent:
             "workflow_mode": "parallel_specialists_with_qa_and_delivery",
             "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
             "team_count": len(team_results),
+            "successful_agents": sum(item["status"] == "completed" for item in team_results),
+            "failed_agents": sum(item["status"] == "failed" for item in team_results),
             "team_results": team_results,
             "note": "Specialists currently return plans, checklists, or starter content. This is not proof that external tools ran or files were published.",
         }
