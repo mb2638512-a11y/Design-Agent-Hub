@@ -27,8 +27,10 @@ Design Agent Hub
   ├─ Provider-neutral model adapter (optional OpenAI-compatible endpoint)
   ├─ Policy / confirmation boundary
   └─ Provider adapters
+       ├─ Penpot official MCP server (connected design file)
        ├─ Figma REST API + local Figma plugin
-       └─ Canva Connect API (templates, exports)
+       ├─ Canva Connect API / MCP (plan-dependent features)
+       └─ Free-first provider router + HTML/CSS/SVG fallback
 ```
 
 ## Quick start
@@ -94,6 +96,7 @@ MCP runs over stdio. Use the client’s own MCP configuration and only expose to
 
 ## Provider setup
 
+- **Penpot:** connect the official Penpot MCP server in your MCP client. See [Penpot MCP docs](https://help.penpot.app/mcp/). Hosted MCP uses the URL shown under Account → Integrations → MCP Server; keep the generated token private. A connected Penpot file/session is required for design actions.
 - **Figma:** create an app or personal access token in Figma's developer settings. Add `FIGMA_ACCESS_TOKEN` to your private environment. OAuth is preferable for multi-user apps. Start with the [official Figma REST API docs](https://developers.figma.com/docs/rest-api/).
 - **Canva:** create an integration in the Canva Developers platform and use the supported OAuth 2.0 flow/scopes. Add `CANVA_ACCESS_TOKEN` only in a local/private environment. Start with the [official Canva Developers docs](https://www.canva.dev/docs/apps/).
 - **Model:** optional OpenAI-compatible endpoint settings are documented in `.env.example`. Use a model/provider you are authorized to access; no provider key is bundled.
