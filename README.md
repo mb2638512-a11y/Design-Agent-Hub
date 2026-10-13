@@ -2,13 +2,14 @@
 
 A provider-agnostic agent hub for design workflows, coding plans, research briefs, QA checklists, and delivery handoffs. It exposes a REST API and MCP tools and has optional official Canva/Figma adapters.
 
-> **Status: early MVP.** The manager and five specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists and a deterministic SVG starter for common social graphics; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma actions still require credentials, account permissions, eligible plans, and an end-to-end test.
+> **Status: early MVP.** The manager and six specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists, deterministic SVG and HTML starter assets, and structured starter copy; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma actions still require credentials, account permissions, eligible plans, and an end-to-end test.
 
 ## Specialist team
 
 - **Main Manager Agent:** routes a task to the best matching specialist and coordinates cross-domain requests.
-- **Design Agent:** uses the 20-category / 152-example catalog and planner; can return a simple editable 1080×1080 SVG starter for social posts, posters, banners, thumbnails, and SVG requests.
+- **Design Agent:** uses the 20-category / 152-example catalog and planner; can return a simple editable 1080×1080 SVG starter and a responsive single-file HTML landing-page starter for supported requests.
 - **Coding Agent:** proposes implementation, testing, security, and deployment steps; does not edit repositories or run code.
+- **Content Agent:** creates editable starter copy for headlines, captions, scripts, product descriptions, and campaign briefs; it does not fact-check or publish content.
 - **Research Agent:** structures source-aware research; does not perform live web searches by itself.
 - **Quality Agent:** returns review gates for correctness, accessibility, privacy, and delivery; does not claim checks actually ran.
 - **Delivery Agent:** prepares a handoff manifest; does not upload, email, publish, or export files itself.
@@ -25,7 +26,7 @@ Human / automation / compatible AI client
               |
    +----------+-----------+----------+-----------+
    |          |           |          |           |
- Design     Coding     Research    Quality    Delivery
+ Design     Coding     Content     Research    Quality    Delivery
    |          |           |          |           |
  plan +     build plan   evidence   QA gates   handoff
  SVG draft               workflow              manifest
@@ -57,7 +58,7 @@ Open `http://127.0.0.1:8000/docs`. In production, set `APP_ENV=production` and a
 
 ## Design output
 
-`POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Save the returned SVG content as a `.svg` file to preview it in a browser or import it into a design tool. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
+`POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Save returned SVG content as a `.svg` file, HTML content as `index.html`, or copy the content starter pack into your campaign draft. Preview assets and replace placeholders before client delivery. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
 
 ## Official provider integrations
 
