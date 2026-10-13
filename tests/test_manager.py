@@ -1,6 +1,7 @@
 """Tests for the manager and extensible agent registry."""
 
 import asyncio
+from typing import ClassVar
 
 import pytest
 
@@ -11,7 +12,7 @@ class FakeAgent:
     id = "fake"
     name = "Fake Agent"
     description = "Used to verify extensible registration."
-    capabilities = ["fake tasks"]
+    capabilities: ClassVar[list[str]] = ["fake tasks"]
 
     def match_score(self, task: str) -> int:
         return 10 if "fake task" in task.casefold() else 0
