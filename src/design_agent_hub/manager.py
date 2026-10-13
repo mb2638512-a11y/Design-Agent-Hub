@@ -116,9 +116,9 @@ class MainManagerAgent:
             if agent.id not in self._support_agents and score > 0
         ]
         normalized = cleaned.casefold()
-        complex_task = (
-            any(marker in normalized for marker in self._complex_markers)
-            or len(domain_matches) >= 2
+        has_multiple_steps = any(mark in normalized for mark in (",", ";", " and ", " then "))
+        complex_task = any(marker in normalized for marker in self._complex_markers) or (
+            len(domain_matches) >= 2 and has_multiple_steps
         )
         if not complex_task:
             try:
