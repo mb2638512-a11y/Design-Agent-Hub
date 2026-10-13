@@ -10,10 +10,23 @@ from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
 from .figma_spec import FigmaSpecRequest, build_figma_spec
+from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
 mcp = FastMCP("design-agent-hub")
+
+
+@mcp.tool()
+def list_registered_agents() -> str:
+    """List the Main Manager Agent and its registered specialist agents."""
+    return json.dumps(main_manager.status(), ensure_ascii=False)
+
+
+@mcp.tool()
+async def manager_dispatch_task(task: str) -> str:
+    """Ask the main manager to select and delegate to a specialist; no external write is implied."""
+    return json.dumps(await main_manager.dispatch(task), ensure_ascii=False)
 
 
 @mcp.tool()
