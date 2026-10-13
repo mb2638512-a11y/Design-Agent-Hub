@@ -27,8 +27,8 @@ Design Agent Hub
   ├─ Provider-neutral model adapter (optional OpenAI-compatible endpoint)
   ├─ Policy / confirmation boundary
   └─ Provider adapters
-       ├─ Figma REST API
-       └─ Canva Connect API
+       ├─ Figma REST API + local Figma plugin
+       └─ Canva Connect API (templates, exports)
 ```
 
 ## Quick start
@@ -80,6 +80,16 @@ Never commit `.env`, access tokens, OAuth client secrets, customer assets, or pr
 - Respect Canva/Figma terms, permissions, rate limits, copyright, and brand rights.
 - Treat model output as a proposal; validate API responses and review final deliverables.
 - Do not send credentials or private designs to a model unless the user has explicitly configured that behavior.
+
+## Figma editable design plugin
+
+1. Open the `figma-plugin/` folder from this repository on your computer.
+2. In the Figma desktop app, open **Plugins → Development → Import plugin from manifest…** and select `figma-plugin/manifest.json`.
+3. Run **Design Agent Hub** from the Development plugins menu.
+4. Generate a JSON spec with `POST /figma/plugin-spec` or MCP tool `figma_create_plugin_spec`, paste it into the plugin UI, review it, and click **Create editable design in Figma**.
+5. The plugin creates native text, rectangle, ellipse, and frame layers in the currently open file. It does not publish or share the file.
+
+This local plugin is the write path for editable Figma layer creation; the Figma REST API adapter itself is read/export oriented.
 
 ## Development
 
