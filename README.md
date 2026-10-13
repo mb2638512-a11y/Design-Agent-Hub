@@ -53,12 +53,13 @@ Open `http://127.0.0.1:8000/docs`. In production, set `APP_ENV=production` and a
 
 - `GET /agents` lists registered specialists and routing mode.
 - `POST /manager/dispatch` with `{"task":"Create an Instagram post design"}` routes a task.
+- `POST /artifacts/download` with `{"task":"Create an Instagram post","file_format":"svg"}` or `{"task":"Create a landing page","file_format":"html"}` returns a downloadable starter file.
 - A cross-domain request such as `{"task":"Research competitors, build a website, test accessibility, and deliver the complete package"}` triggers a bounded multi-agent workflow.
 - MCP clients can use `list_registered_agents` and `manager_dispatch_task`.
 
 ## Design output
 
-`POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Save returned SVG content as a `.svg` file, HTML content as `index.html`, or copy the content starter pack into your campaign draft. Preview assets and replace placeholders before client delivery. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
+`POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Use `POST /artifacts/download` to download an editable SVG or HTML starter directly. You can also save returned SVG content as a `.svg` file, HTML content as `index.html`, or copy the content starter pack into your campaign draft. Preview assets and replace placeholders before client delivery. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
 
 ## Official provider integrations
 
