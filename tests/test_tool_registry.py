@@ -11,7 +11,7 @@ def test_catalog_has_separate_builtin_mcp_and_api_hubs():
 
 
 def test_free_only_filters_integrations_requiring_external_api_keys():
-    catalog = list_tool_catalog(free_only=True)
+    catalog = list_tool_catalog(no_key_only=True)
     assert catalog["counts"]["builtin"] >= 10
     for items in catalog["items"].values():
         assert all(not item.get("needs_external_api_key", False) for item in items)
