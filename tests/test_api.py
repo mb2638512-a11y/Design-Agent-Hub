@@ -81,3 +81,14 @@ def test_production_mode_requires_api_token(monkeypatch):
     response = client.get("/catalog")
     assert response.status_code == 503
     assert "API_BEARER_TOKEN" in response.json()["detail"]
+
+
+def test_recommend_tools_endpoint_is_free_first_and_plan_only():
+    response = client.post(
+        "/tools/recommend",
+        json={"task": "Create an Instagram post for a product launch"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["recommended_tool"] == "canva"
+    assert body["execution_status"] == "recommendation_only"
