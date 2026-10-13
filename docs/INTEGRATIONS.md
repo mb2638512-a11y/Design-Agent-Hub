@@ -50,6 +50,7 @@ Tools cover catalog/search/planning, authorized Figma file reads and node-image 
 - `GET /catalog/search?q=thumbnail`
 - `POST /plan`
 - `GET /connectors/status`
+- `POST /workflow/prepare` with a task brief and optional visual copy; returns a plan plus a paste-ready Figma spec without writing to external services
 - `POST /figma/plugin-spec` with design title, headline, subheading, dimensions, and colors
 - `POST /connectors/canva/autofills` with `brand_template_id`, `data`, optional `title`, and `user_approved: true`
 - `GET /connectors/canva/autofills/{job_id}`
@@ -64,3 +65,12 @@ Set `API_BEARER_TOKEN` before exposing the API beyond localhost and send `Author
 ## 6. Optional model endpoint
 
 Set `MODEL_BASE_URL`, `MODEL_API_KEY`, and `MODEL_NAME` for an OpenAI-compatible chat-completions endpoint. Keep keys private. If the endpoint is unavailable or returns invalid output, the planner falls back to deterministic planning.
+
+
+## Docker Compose
+
+Copy `.env.example` to `.env`, generate a strong random `API_BEARER_TOKEN`, then run `docker compose up --build -d`. The compose file binds to localhost only. Do not remove that binding or expose the service publicly until TLS, rate limiting, persistent encrypted token storage, user isolation, and deployment hardening are in place.
+
+## OAuth and account setup status
+
+The provider adapters currently accept an authorized access token from the private environment. They do not yet implement a complete multi-user OAuth callback/token-refresh service or persistent encrypted token vault. Create your own developer apps, configure only the scopes you need, and never commit tokens. For a production multi-user service, add encrypted token storage and refresh/revocation handling before offering account connections to external users.
