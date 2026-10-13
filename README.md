@@ -17,6 +17,10 @@ A **frontend-free MCP server** that gives compatible AI agents extra tools for d
 - **Quality Agent:** returns review gates for correctness, accessibility, privacy, and delivery; does not claim checks actually ran.
 - **Delivery Agent:** prepares a handoff manifest; does not upload, email, publish, or export files itself.
 
+## NOVA app ecosystem: GenOffice + ArtCraft
+
+The `app` catalog lists GenOffice and 13 ArtCraft editors for AI task routing. These remain separate upstream applications; this repository does not bundle or install their source trees. See [`integrations/apps/README.md`](integrations/apps/README.md) for the safe integration plan.
+
 ## Architecture
 
 ```text
