@@ -107,3 +107,29 @@ def test_manager_api_delegates_design_task():
     assert response.status_code == 200
     assert response.json()["status"] == "delegated"
     assert response.json()["selected_agent"]["id"] == "design"
+
+
+def test_artifact_download_returns_editable_svg():
+    response = client.post(
+        "/artifacts/download",
+        json={"task": "Create an Instagram post", "file_format": "svg"},
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/svg+xml")
+    assert response.headers["content-disposition"].endswith(".svg\"")
+    assert "<svg" in response.text
+
+
+def test_artifact_download_returns_html_and_rejects_other_formats():
+    response = client.post(
+        "/artifacts/download",
+        json={"task": "Create a landing page", "file_format": "html"},
+    )
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "<!doctype html>" in response.text.lower()
+    invalid = client.post(
+        "/artifacts/download",
+        json={"task": "Create a landing page", "file_format": "exe"},
+    )
+    assert invalid.status_code == 422
