@@ -24,6 +24,7 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
+from .tool_registry import list_tool_catalog, search_tool_catalog
 
 app = FastAPI(
     title="Design Agent Hub",
@@ -360,3 +361,18 @@ async def connector_status() -> dict[str, object]:
             "storage": "local SQLite; compact task summaries only",
         },
     }
+
+
+@app.get("/tools/catalog", dependencies=[Depends(require_api_token)])
+async def tools_catalog(kind: str | None = None, free_only: bool = False) -> dict[str, object]:
+    result = list_tool_catalog(kind=kind, free_only=free_only)
+    if "error" in result:
+        raise HTTPException(status_code=422, detail=result["error"])
+    return result
+
+
+@app.get("/tools/catalog/search", dependencies=[Depends(require_api_token)])
+async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, object]:
+    if kind and kind not in {"builtin", "mcp", "api"}:
+        raise HTTPException(status_code=422, detail="kind must be builtin, mcp, or api")
+    return {"query": q, "kind": kind or "all", "matches": search_tool_catalog(q, kind)}
