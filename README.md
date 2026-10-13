@@ -63,6 +63,10 @@ Open `http://127.0.0.1:8000/docs`. In production, set `APP_ENV=production` and a
 
 `POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Use `POST /artifacts/download` to download an editable SVG or HTML starter directly, or `POST /artifacts/package` to download a ZIP containing both starters, a content brief, and a manifest. You can also save returned SVG content as a `.svg` file, HTML content as `index.html`, or copy the content starter pack into your campaign draft. Preview assets and replace placeholders before client delivery. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
 
+## Social media agent
+
+The Social Media Agent plans workflows for Facebook Pages, Instagram, YouTube, TikTok, LinkedIn Pages, Pinterest, Threads, and X. `GET /social/platforms` returns the supported-platform catalog, setup constraints, and shared workflow. See [the social media implementation roadmap](docs/SOCIAL_MEDIA_ROADMAP.md). The catalog is not a live connection: account inventory, OAuth, publishing, moderation, and analytics require approved provider integrations and secure per-user authorization.
+
 ## Official provider integrations
 
 - **Penpot:** use the official [Penpot MCP docs](https://help.penpot.app/mcp/). Keep account-specific URLs/tokens private.
