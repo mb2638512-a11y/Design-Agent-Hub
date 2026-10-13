@@ -92,8 +92,10 @@ The provider adapters currently accept an authorized access token from the priva
 
 ## 10. Social platform operations
 
-The Social Media Agent is available through `POST /manager/dispatch`. It can prepare an operating plan for accounts that you own or are authorized to manage, including platform-specific profiles, a content calendar, approval queues, moderation guidelines, and analytics.
+The Social Media Agent is available through `POST /manager/dispatch`. `GET /social/platforms` returns a machine-readable catalog for Facebook Pages, Instagram, YouTube, TikTok, LinkedIn Pages, Pinterest, Threads, and X, including setup constraints and official developer documentation links.
 
-The current agent does not sign in, create pages, publish posts, reply to messages, or fetch analytics. To enable those actions, implement and review one official platform integration at a time. Use each platform's current developer documentation, OAuth, minimum required scopes, encrypted token storage, account-owner authorization, audit logs, rate limits, and an approval step before public writes. Page/channel creation is platform-dependent and may require a manual official UI step or app review.
+The catalog and agent prepare workflows; they do **not** indicate live account access. This repository does not yet sign in to social accounts, create pages, publish posts, reply to messages, or fetch analytics. Follow [the all-platform Social Media Agent roadmap](SOCIAL_MEDIA_ROADMAP.md) for the target workflow, platform-specific limitations, phased delivery, and production acceptance criteria.
+
+For real actions, implement and review each official integration with OAuth, minimum required scopes, encrypted per-user token storage, token refresh/revocation, account-owner authorization, audit logs, rate limits, and approval before public writes. Page/channel creation is platform-dependent and may require a manual official UI step or app review.
 
 Never store account passwords in this project or commit access tokens. Do not automate fake engagement, unsolicited bulk messaging, or actions that bypass platform limits.
