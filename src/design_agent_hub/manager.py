@@ -216,23 +216,91 @@ class MainManagerAgent:
             response["memory"] = self._remember(cleaned, response)
             return response
 
-        selected: list[SpecialistAgent] = []
+        domain_agents: list[SpecialistAgent] = []
         for _, agent in ranked:
-            if agent.id not in self._support_agents and len(selected) < self.max_domain_specialists:
-                selected.append(agent)
-        for support_id in self._support_agents:
-            support = self.registry.get(support_id)
-            if support is not None and all(item.id != support.id for item in selected):
-                selected.append(support)
+            if agent.id not in self._support_agents and len(domain_agents) < self.max_domain_specialists:
+                domain_agents.append(agent)
 
-        outputs = await asyncio.gather(*(self._run_with_timeout(agent, cleaned) for agent in selected), return_exceptions=True)
+        # Stage 1: domain work in parallel.
+        domain_outputs = await asyncio.gather(
+            *(self._run_with_timeout(agent, cleaned) for agent in domain_agents),
+            return_exceptions=True,
+        )
         team_results: list[dict[str, object]] = []
-        for agent, output in zip(selected, outputs, strict=True):
+        domain_context: list[dict[str, object]] = []
+        for agent, output in zip(domain_agents, domain_outputs, strict=True):
             if isinstance(output, BaseException):
-                team_results.append({"agent": {"id": agent.id, "name": agent.name}, **self._safe_failure(output)})
+                failure = self._safe_failure(output)
+                entry = {"agent": {"id": agent.id, "name": agent.name}, "stage": "domain", **failure}
+                team_results.append(entry)
+                domain_context.append(entry)
                 continue
             output, validation = self._repair_output(agent, output)
-            team_results.append({"agent": {"id": agent.id, "name": agent.name}, "status": "completed" if validation["valid"] else "invalid_output", "quality_gate": validation, "result": output})
+            entry = {
+                "agent": {"id": agent.id, "name": agent.name},
+                "stage": "domain",
+                "status": "completed" if validation["valid"] else "invalid_output",
+                "quality_gate": validation,
+                "result": output,
+            }
+            team_results.append(entry)
+            domain_context.append(entry)
+
+        # Stage 2: QA receives the actual domain outputs instead of reviewing only the original request.
+        qa_agent = self.registry.get("quality")
+        qa_entry: dict[str, object] | None = None
+        if qa_agent is not None:
+            qa_context = json.dumps(
+                {"original_task": cleaned, "domain_results": domain_context},
+                ensure_ascii=False,
+                default=str,
+            )[:12_000]
+            try:
+                qa_output = await self._run_with_timeout(
+                    qa_agent,
+                    f"Review the following task and returned specialist results. Identify concrete gaps, risks, contradictions, missing acceptance criteria, and verification steps. Do not claim tests were run unless evidence is included. Context: {qa_context}",
+                )
+            except BaseException as exc:
+                if isinstance(exc, (KeyboardInterrupt, SystemExit, asyncio.CancelledError)):
+                    raise
+                qa_entry = {"agent": {"id": qa_agent.id, "name": qa_agent.name}, "stage": "quality_review", **self._safe_failure(exc)}
+            else:
+                qa_output, validation = self._repair_output(qa_agent, qa_output)
+                qa_entry = {
+                    "agent": {"id": qa_agent.id, "name": qa_agent.name},
+                    "stage": "quality_review",
+                    "status": "completed" if validation["valid"] else "invalid_output",
+                    "quality_gate": validation,
+                    "result": qa_output,
+                }
+            team_results.append(qa_entry)
+
+        # Stage 3: delivery gets the domain results and QA review for a more useful handoff.
+        delivery_agent = self.registry.get("delivery")
+        if delivery_agent is not None:
+            delivery_context = json.dumps(
+                {"original_task": cleaned, "domain_results": domain_context, "quality_review": qa_entry},
+                ensure_ascii=False,
+                default=str,
+            )[:12_000]
+            try:
+                delivery_output = await self._run_with_timeout(
+                    delivery_agent,
+                    f"Prepare a handoff manifest for the original task using the specialist results and QA review below. Clearly label unverified items. Context: {delivery_context}",
+                )
+            except BaseException as exc:
+                if isinstance(exc, (KeyboardInterrupt, SystemExit, asyncio.CancelledError)):
+                    raise
+                team_results.append({"agent": {"id": delivery_agent.id, "name": delivery_agent.name}, "stage": "delivery_handoff", **self._safe_failure(exc)})
+            else:
+                delivery_output, validation = self._repair_output(delivery_agent, delivery_output)
+                team_results.append({
+                    "agent": {"id": delivery_agent.id, "name": delivery_agent.name},
+                    "stage": "delivery_handoff",
+                    "status": "completed" if validation["valid"] else "invalid_output",
+                    "quality_gate": validation,
+                    "result": delivery_output,
+                })
 
         successful = sum(item["status"] == "completed" for item in team_results)
         failed = len(team_results) - successful
@@ -240,13 +308,13 @@ class MainManagerAgent:
             "status": "multi_agent_workflow" if failed == 0 else "multi_agent_partial_failure",
             "manager": self.name,
             "task": cleaned,
-            "workflow_mode": "parallel_specialists_with_qa_and_delivery",
+            "workflow_mode": "parallel_domain_work_then_qa_then_delivery",
             "selected_agent": {"id": primary.id, "name": primary.name, "score": primary_score},
             "task_plan": plan,
             "orchestration": {
                 "selection_strategy": "highest positive capability scores, bounded to three domain specialists",
-                "quality_review": "quality specialist included when registered; structural validation runs on every result",
-                "delivery_handoff": "delivery specialist included when registered",
+                "quality_review": "QA runs after domain specialists and receives their returned outputs; structural validation runs on every result",
+                "delivery_handoff": "Delivery runs after QA and receives the domain results plus QA review",
                 "failure_policy": "Preserve successful outputs and identify failed or invalid results for targeted retry; automatic retries are avoided for safety.",
                 "result_contract": "completed means a structurally valid result was returned; external actions require explicit tool-confirmed evidence.",
                 "next_step": "Review outputs, retry only failed work, then authorize consequential external actions when appropriate.",
