@@ -15,4 +15,7 @@ jobs:
           cache: pip
       - run: python -m pip install -e ".[dev]"
       - run: ruff check src tests
+      - run: python -m json.tool figma-plugin/manifest.json > /dev/null
+      - run: python -m json.tool examples/figma-social-post.json > /dev/null
+      - run: node --check figma-plugin/code.js
       - run: pytest
