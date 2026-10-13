@@ -364,8 +364,8 @@ async def connector_status() -> dict[str, object]:
 
 
 @app.get("/tools/catalog", dependencies=[Depends(require_api_token)])
-async def tools_catalog(kind: str | None = None, free_only: bool = False) -> dict[str, object]:
-    result = list_tool_catalog(kind=kind, free_only=free_only)
+async def tools_catalog(kind: str | None = None, no_key_only: bool = False) -> dict[str, object]:
+    result = list_tool_catalog(kind=kind, no_key_only=no_key_only)
     if "error" in result:
         raise HTTPException(status_code=422, detail=result["error"])
     return result
