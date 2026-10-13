@@ -22,7 +22,7 @@ class DesignSpecialistAgent:
         "accessibility", "figma", "canva", "penpot", "design",
     ]
     _svg_keywords: ClassVar[tuple[str, ...]] = (
-        "instagram post", "social post", "poster", "thumbnail", "banner", "graphic", "svg",
+        "instagram post", "youtube thumbnail", "social post", "poster", "thumbnail", "banner", "graphic", "svg",
     )
 
     def match_score(self, task: str) -> int:
