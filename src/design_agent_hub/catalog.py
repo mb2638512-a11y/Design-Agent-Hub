@@ -19,6 +19,10 @@ CATALOG: list[dict[str, object]] = [
     {"id": "email_crm", "name": "Email and lifecycle marketing", "jobs": ["email header", "newsletter template", "welcome email visual", "product launch email visual", "email campaign asset set"]},
     {"id": "localization", "name": "Localization and variants", "jobs": ["language adaptation brief", "locale-specific size variants", "RTL layout review", "cultural suitability checklist", "localized campaign kit"]},
     {"id": "quality_delivery", "name": "Quality assurance and delivery", "jobs": ["contrast check plan", "visual consistency review", "content-fit review", "responsive QA checklist", "asset naming plan", "export settings checklist", "handoff package manifest", "revision summary"]},
+    {"id": "photo_image_editing", "name": "Photo and image editing", "jobs": ["photo crop and resize plan", "background removal brief", "color correction brief", "image retouching checklist", "product photo cleanup", "transparent PNG asset brief", "image compression plan", "raster export checklist"]},
+    {"id": "motion_video", "name": "Motion and video graphics", "jobs": ["animated title card brief", "lower-third graphics", "storyboard visual plan", "short-video captions layout", "motion poster brief", "simple animated SVG", "video overlay package", "frame-by-frame asset checklist"]},
+    {"id": "illustration_vector", "name": "Illustration and vector assets", "jobs": ["SVG icon set", "vector illustration brief", "app icon family", "infographic vector shapes", "sticker sheet", "simple mascot concept", "editable diagram assets", "print-ready vector export"]},
+    {"id": "3d_assets", "name": "3D and product visualization", "jobs": ["3D product render brief", "simple 3D scene plan", "lighting setup brief", "material palette", "3D icon concept", "mockup scene checklist", "camera composition plan", "render export checklist"]},
 ]
 
 def get_catalog() -> list[dict[str, object]]:
