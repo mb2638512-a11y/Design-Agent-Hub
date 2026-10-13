@@ -12,8 +12,8 @@ from . import __version__
 from .catalog import get_catalog, search_catalog
 from .connectors.canva import CanvaConnector
 from .connectors.figma import FigmaConnector
-from .planner import PlanRequest, create_plan
 from .figma_spec import FigmaSpecRequest, build_figma_spec
+from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 
 app = FastAPI(
