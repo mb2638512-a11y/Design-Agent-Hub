@@ -1,37 +1,37 @@
 # Design Agent Hub
 
-A provider-agnostic design workflow agent for UI/UX, brand and graphic design, content production, and agent-to-agent automation. It is designed to connect to **official Canva and Figma APIs** where the account, scopes, and plan permit, and expose reusable capabilities through a REST API and MCP tools.
+A provider-agnostic agent hub for design workflows, coding plans, research briefs, QA checklists, and delivery handoffs. It exposes a REST API and MCP tools and has optional official Canva/Figma adapters.
 
-> **Status: early MVP.** The REST API, design catalog, planner, MCP tools, provider adapters, and CI tests are implemented. Live provider actions still require your own valid credentials, scopes, and an end-to-end test against your Canva/Figma accounts. This repository does not bypass product restrictions or claim every task is automatable.
+> **Status: early MVP.** The manager and five specialist agents are implemented with deterministic capability scoring. CI tests validate routing and workflow contracts. The specialists return plans/checklists and a deterministic SVG starter for common social graphics; they do not autonomously complete arbitrary client jobs or guarantee polished assets. Live Canva/Figma actions still require credentials, account permissions, eligible plans, and an end-to-end test.
 
-## What it covers
+## Specialist team
 
-- **Product & UI/UX:** discovery briefs, user flows, information architecture, wireframes, responsive screens, prototypes, accessibility reviews, design systems, dashboards, web and mobile app interfaces.
-- **Brand & identity:** logo concepts, visual identity briefs, typography/color systems, brand guidelines, asset packs.
-- **Marketing & social:** social posts, ad creative briefs, YouTube thumbnails, banners, campaign kits, email graphics, landing-page creative.
-- **Publishing & documents:** presentations, pitch decks, reports, infographics, ebooks, worksheets, posters, flyers, invitations, menus, resumes.
-- **Commerce & business:** product listings, product graphics, storefront creative, sales sheets, catalogs, packaging concepts.
-- **Production & QA:** resize/adaptation plans, localization checklists, contrast/accessibility checks, naming conventions, export checklists, delivery manifests.
-- **Automation:** structured task planning, API integration boundaries, REST endpoints, MCP tools for compatible AI agents, and workflow-friendly JSON responses.
-
-The catalog is a workflow map, not a claim that Canva or Figma can natively generate every asset type via API.
+- **Main Manager Agent:** routes a task to the best matching specialist and coordinates cross-domain requests.
+- **Design Agent:** uses the 20-category / 152-example catalog and planner; can return a simple editable 1080×1080 SVG starter for social posts, posters, banners, thumbnails, and SVG requests.
+- **Coding Agent:** proposes implementation, testing, security, and deployment steps; does not edit repositories or run code.
+- **Research Agent:** structures source-aware research; does not perform live web searches by itself.
+- **Quality Agent:** returns review gates for correctness, accessibility, privacy, and delivery; does not claim checks actually ran.
+- **Delivery Agent:** prepares a handoff manifest; does not upload, email, publish, or export files itself.
 
 ## Architecture
 
 ```text
-Human / AI agent / automation
-        | REST API or MCP (stdio)
-        v
-Main Manager Agent
-  └─ Agent Registry / Dispatcher
-       └─ Design Agent (first specialist)
-            ├─ 20 design categories / 152 job examples
-            ├─ Planner + free-first provider router
-            └─ Penpot MCP / Figma adapter + plugin / Canva adapter
-
-Future specialists can register through the same SpecialistAgent contract.
-The manager chooses a matching registered agent and returns its result.
+Human / automation / compatible AI client
+              | REST API or MCP (stdio)
+              v
+       Main Manager Agent
+              |
+        Agent Registry
+              |
+   +----------+-----------+----------+-----------+
+   |          |           |          |           |
+ Design     Coding     Research    Quality    Delivery
+   |          |           |          |           |
+ plan +     build plan   evidence   QA gates   handoff
+ SVG draft               workflow              manifest
 ```
+
+Routing uses keyword/capability scoring, not autonomous reasoning. Complex cross-domain tasks can run up to three domain specialists plus Quality and Delivery in parallel. Results are proposals, not proof of external actions.
 
 ## Quick start
 
@@ -46,102 +46,36 @@ cp .env.example .env  # Windows PowerShell: Copy-Item .env.example .env
 uvicorn design_agent_hub.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` for interactive API docs. For a production deployment, set `APP_ENV=production` and a strong `API_BEARER_TOKEN` before exposing the service.
+Open `http://127.0.0.1:8000/docs`. In production, set `APP_ENV=production` and a strong `API_BEARER_TOKEN` before exposing the service.
 
-### Example request
+## Manager API
 
-```bash
-curl -X POST http://127.0.0.1:8000/plan \
-  -H "Content-Type: application/json" \
-  -d '{"request":"Create a clean mobile banking dashboard UI brief","audience":"startup founders","platform":"mobile","constraints":["accessible contrast","responsive"]}'
-```
-
-### Combined workflow preparation
-
-```bash
-curl -X POST http://127.0.0.1:8000/workflow/prepare \
-  -H "Content-Type: application/json" \
-  -d '{"request":"Create a launch social post","headline":"Launch day","subheading":"A clear message for the audience."}'
-```
-
-This returns a plan and a paste-ready Figma plugin spec. It does not create external assets. Use the spec in the local Figma plugin after reviewing it.
-
-### Canva template autofill
-
-Once Canva OAuth is configured and you have an eligible plan plus a brand template with tagged fields, call `POST /connectors/canva/autofills` with `user_approved: true`. Example field names below are placeholders; use the exact names from your own template dataset:
-
-```json
-{
-  "brand_template_id": "YOUR_TEMPLATE_ID",
-  "title": "Campaign design",
-  "user_approved": true,
-  "data": {
-    "HEADLINE": {"type": "text", "text": "A new launch"},
-    "SUBHEAD": {"type": "text", "text": "Made for your audience"}
-  }
-}
-```
-
-The API returns an asynchronous job ID. Poll `GET /connectors/canva/autofills/{job_id}` until the job is `success` or `failed`, then export the created design if needed. Canva autofill may require a Pro, Teams, or Enterprise plan and correct scopes.
-
-### Main manager agent
-
-- `GET /agents` lists the manager and registered specialists.
-- `POST /manager/dispatch` accepts `{"task":"Create an Instagram post design"}` and delegates to the best matching registered agent.
+- `GET /agents` lists registered specialists and routing mode.
+- `POST /manager/dispatch` with `{"task":"Create an Instagram post design"}` routes a task.
+- A cross-domain request such as `{"task":"Research competitors, build a website, test accessibility, and deliver the complete package"}` triggers a bounded multi-agent workflow.
 - MCP clients can use `list_registered_agents` and `manager_dispatch_task`.
-- The first registered specialist is `Design Agent`. It currently returns a plan/specification, not a promise of fully autonomous asset creation. Add future specialists by implementing the `SpecialistAgent` contract and registering them in `src/design_agent_hub/manager.py`.
 
-### MCP server
+## Design output
 
-For compatible local agent clients, configure a Python command that runs:
+`POST /manager/dispatch` may include a `starter_asset` with SVG source for common static graphics. It is a generic editable starting point, not a finished brand-approved design. Save the returned SVG content as a `.svg` file to preview it in a browser or import it into a design tool. The existing `POST /workflow/prepare` endpoint also returns a plan and Figma plugin spec, not a live Figma write.
 
-```bash
-python -m design_agent_hub.mcp_server
-```
+## Official provider integrations
 
-MCP runs over stdio. Use the client’s own MCP configuration and only expose tools to trusted agents. See [integration guide](docs/INTEGRATIONS.md).
+- **Penpot:** use the official [Penpot MCP docs](https://help.penpot.app/mcp/). Keep account-specific URLs/tokens private.
+- **Figma:** use the [official Figma REST API docs](https://developers.figma.com/docs/rest-api/) and set `FIGMA_ACCESS_TOKEN` privately.
+- **Canva:** use [Canva Developers](https://www.canva.dev/docs/apps/) and the supported OAuth scopes. Some template autofill features require eligible paid plans.
+- **Model:** optional OpenAI-compatible endpoint settings are documented in `.env.example`; no model credentials are bundled.
 
-## Provider setup
-
-- **Penpot:** connect the official Penpot MCP server in your MCP client. See [Penpot MCP docs](https://help.penpot.app/mcp/). Hosted MCP uses the URL shown under Account → Integrations → MCP Server; keep the generated token private. A connected Penpot file/session is required for design actions.
-- **Figma:** create an app or personal access token in Figma's developer settings. Add `FIGMA_ACCESS_TOKEN` to your private environment. OAuth is preferable for multi-user apps. Start with the [official Figma REST API docs](https://developers.figma.com/docs/rest-api/).
-- **Canva:** create an integration in the Canva Developers platform and use the supported OAuth 2.0 flow/scopes. Add `CANVA_ACCESS_TOKEN` only in a local/private environment. Start with the [official Canva Developers docs](https://www.canva.dev/docs/apps/).
-- **Model:** optional OpenAI-compatible endpoint settings are documented in `.env.example`. Use a model/provider you are authorized to access; no provider key is bundled.
-
-Never commit `.env`, access tokens, OAuth client secrets, customer assets, or private design files. Rotate any credential accidentally exposed.
-
-## Safety and reliability
-
-- Read-only operations should be the default until a user explicitly authorizes writes.
-- Require confirmation before publishing, overwriting, sharing externally, or spending paid credits.
-- Use least-privilege OAuth scopes; validate all URLs and user inputs; keep logs free of secrets.
-- Respect Canva/Figma terms, permissions, rate limits, copyright, and brand rights.
-- Treat model output as a proposal; validate API responses and review final deliverables.
-- Do not send credentials or private designs to a model unless the user has explicitly configured that behavior.
-
-## Docker Compose
-
-1. Copy `.env.example` to `.env` and set a strong `API_BEARER_TOKEN`.
-2. Run `docker compose up --build -d`.
-3. The service is bound to `127.0.0.1:8000` by default. Keep it local until you have configured authentication, TLS, rate limiting, and deployment hardening.
-
-## Figma editable design plugin
-
-1. Open the `figma-plugin/` folder from this repository on your computer.
-2. In the Figma desktop app, open **Plugins → Development → Import plugin from manifest…** and select `figma-plugin/manifest.json`.
-3. Run **Design Agent Hub** from the Development plugins menu.
-4. Generate a JSON spec with `POST /figma/plugin-spec` or MCP tool `figma_create_plugin_spec`, paste it into the plugin UI, review it, and click **Create editable design in Figma**.
-5. The plugin creates native text, rectangle, ellipse, and frame layers in the currently open file. It does not publish or share the file.
-
-This local plugin is the write path for editable Figma layer creation; the Figma REST API adapter itself is read/export oriented.
+Do not commit secrets, customer assets, or private design files. Require explicit user approval before publishing, overwriting, sharing externally, or spending paid credits. Respect provider terms, rate limits, licensing, and privacy.
 
 ## Development
 
 ```bash
 pytest
+ruff check .
 ```
 
-See [architecture](docs/ARCHITECTURE.md), [integration guide](docs/INTEGRATIONS.md), and [task catalog](src/design_agent_hub/catalog.py).
+See [integration guide](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), and the [task catalog](src/design_agent_hub/catalog.py).
 
 ## License
 
