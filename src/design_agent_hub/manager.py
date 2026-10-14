@@ -13,6 +13,11 @@ from .agents.design_agent import DesignSpecialistAgent
 from .agents.quality_agent import QualitySpecialistAgent
 from .agents.research_agent import ResearchSpecialistAgent
 from .agents.social_media_agent import SocialMediaSpecialistAgent
+from .agents.local_workflow_agents import (
+    AudioSpecialistAgent, ImageSpecialistAgent, OfficeSpecialistAgent,
+    PdfSpecialistAgent, SpreadsheetSpecialistAgent, VectorSpecialistAgent,
+    VideoSpecialistAgent,
+)
 from .task_memory import remember_task
 
 
@@ -71,7 +76,9 @@ class MainManagerAgent:
         self.registry = registry or AgentRegistry([
             DesignSpecialistAgent(), CodingSpecialistAgent(), ContentSpecialistAgent(),
             ResearchSpecialistAgent(), SocialMediaSpecialistAgent(), QualitySpecialistAgent(),
-            DeliverySpecialistAgent(),
+            DeliverySpecialistAgent(), OfficeSpecialistAgent(), ImageSpecialistAgent(),
+            VectorSpecialistAgent(), VideoSpecialistAgent(), AudioSpecialistAgent(),
+            SpreadsheetSpecialistAgent(), PdfSpecialistAgent(),
         ])
 
     def status(self) -> dict[str, object]:
