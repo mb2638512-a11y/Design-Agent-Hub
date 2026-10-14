@@ -40,6 +40,23 @@ MCP_CATALOG: list[dict[str, Any]] = [
     {"id": "mcp-gateway", "name": "MCP Gateway / aggregator", "purpose": "Combine multiple MCP servers or API sources behind a controlled endpoint.", "repository": "https://github.com/unrelated-ai/mcp-gateway", "needs_mcp": True, "needs_external_api_key": False, "status": "reference_only", "safety": "Gateway security, authentication, allowlists, and secret storage must be configured."},
 ]
 
+APP_CATALOG: list[dict[str, Any]] = [
+    {"id": "genoffice-suite", "name": "GenOffice suite", "purpose": "Local AI-aware office suite for DOCX, XLSX, PPTX, PDF, Markdown and HTML; the suite has built-in document agents and CLI/agent integration.", "documentation": "https://github.com/genspark-ai/genoffice", "license_note": "Apache-2.0 core; ee/ has separate enterprise terms", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-photocraft", "name": "PhotoCraft", "purpose": "Raster photo and image editing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-lightcraft", "name": "LightCraft", "purpose": "RAW photo library and development.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-vectorcraft", "name": "VectorCraft", "purpose": "Vector illustration and SVG editing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-designcraft", "name": "DesignCraft", "purpose": "Page layout and publishing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-figcraft", "name": "FigCraft", "purpose": "Interface design and prototyping.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-filmcraft", "name": "FilmCraft", "purpose": "Video editing and timeline workflows.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-effectcraft", "name": "EffectCraft", "purpose": "Motion graphics and compositing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-pdfcraft", "name": "PdfCraft", "purpose": "PDF reading, organization and editing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-wordcraft", "name": "WordCraft", "purpose": "Word processing and document editing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-soundcraft", "name": "SoundCraft", "purpose": "Audio recording and editing.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-deckcraft", "name": "DeckCraft", "purpose": "Slide decks and presentations.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-cadcraft", "name": "CADCraft", "purpose": "CAD and technical drafting.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+    {"id": "artcraft-gridcraft", "name": "GridCraft", "purpose": "Spreadsheets and data analysis.", "documentation": "https://getartcraft.com/apps", "license_note": "Verify per-repository license before use", "control_channels": ["local_cli_or_json_if_supported", "mcp_if_supported"], "needs_mcp": false, "needs_external_api_key": false, "status": "reference_only", "execution_status": "not_installed_not_verified", "note": "Catalog entry only; no app is bundled, installed, launched, or controlled by this repository."},
+]
+
 API_CATALOG: list[dict[str, Any]] = [
     {"id": "api-open-meteo", "name": "Open-Meteo", "purpose": "Weather and forecast data.", "documentation": "https://open-meteo.com/en/docs", "needs_mcp": False, "needs_external_api_key": False, "status": "reference_only", "limits": "Review current fair-use limits and attribution requirements."},
     {"id": "api-rest-countries", "name": "REST Countries", "purpose": "Country names, regions, flags, and basic country metadata.", "documentation": "https://restcountries.com/", "needs_mcp": False, "needs_external_api_key": False, "status": "reference_only"},
@@ -56,22 +73,22 @@ API_CATALOG: list[dict[str, Any]] = [
 ]
 
 
-def list_tool_catalog(kind: str | None = None, free_only: bool = False) -> dict[str, Any]:
+def list_tool_catalog(kind: str | None = None, no_key_only: bool = False) -> dict[str, Any]:
     """Return built-in capabilities and curated integration references."""
-    groups = {"builtin": BUILTIN_TOOLS, "mcp": MCP_CATALOG, "api": API_CATALOG}
+    groups = {"builtin": BUILTIN_TOOLS, "mcp": MCP_CATALOG, "api": API_CATALOG, "app": APP_CATALOG}
     if kind and kind not in groups:
-        return {"error": "kind must be one of: builtin, mcp, api", "available_kinds": list(groups)}
+        return {"error": "kind must be one of: builtin, mcp, api, app", "available_kinds": list(groups)}
     selected = {kind: groups[kind]} if kind else groups
     result: dict[str, Any] = {}
     for group, items in selected.items():
         result[group] = [
             item for item in items
-            if not free_only or not item.get("needs_external_api_key", False)
+            if not no_key_only or not item.get("needs_external_api_key", False)
         ]
     return {
         "counts": {group: len(items) for group, items in result.items()},
         "total": sum(len(items) for items in result.values()),
-        "free_no_external_api_key_count": sum(
+        "no_external_api_key_count": sum(
             1 for items in result.values() for item in items
             if not item.get("needs_external_api_key", False)
         ),
@@ -92,3 +109,32 @@ def search_tool_catalog(query: str, kind: str | None = None) -> list[dict[str, A
         item for items in catalog["items"].values() for item in items
         if q in " ".join(str(value) for value in item.values()).casefold()
     ][:50]
+
+
+CATALOG_SOURCES: list[dict[str, Any]] = [
+    {
+        "id": "mcphq-landscape",
+        "kind": "mcp",
+        "name": "MCPHQ Awesome MCP Servers",
+        "url": "https://landscape.mcphq.org/api/servers.json",
+        "repository": "https://github.com/mcpHQ/awesome-mcp-servers",
+        "purpose": "Curated structured metadata for discovering MCP servers.",
+        "sync_mode": "explicit_opt_in_only",
+        "verified_by_this_project": False,
+    },
+    {
+        "id": "apis-guru-openapi-directory",
+        "kind": "api",
+        "name": "APIs.guru OpenAPI Directory",
+        "url": "https://api.apis.guru/v2/list.json",
+        "repository": "https://github.com/APIs-guru/openapi-directory",
+        "purpose": "Discover public API specifications for possible client generation.",
+        "sync_mode": "explicit_opt_in_only",
+        "verified_by_this_project": False,
+    },
+]
+
+
+def list_catalog_sources() -> list[dict[str, Any]]:
+    """Return upstream metadata catalog feeds; does not fetch or trust them automatically."""
+    return [dict(source) for source in CATALOG_SOURCES]

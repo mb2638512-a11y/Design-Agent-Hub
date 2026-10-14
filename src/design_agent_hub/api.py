@@ -24,11 +24,13 @@ from .manager import manager as main_manager
 from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
+from .catalog_sync import sync_catalog_source
 
 app = FastAPI(
-    title="Design Agent Hub",
+    title="NOVA — Networked Orchestration & Visual Automation",
     version=__version__,
-    description="Provider-neutral design workflow planner with optional Canva/Figma adapters.",
+    description="NOVA: provider-neutral design and social workflow agent with optional Canva/Figma adapters.",
 )
 
 _cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000").split(",") if origin.strip()]
@@ -109,7 +111,7 @@ async def require_api_token(authorization: str | None = Header(default=None)) ->
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "Design Agent Hub", "version": __version__}
+    return {"status": "ok", "service": "NOVA — Networked Orchestration & Visual Automation", "version": __version__}
 
 
 @app.get("/agents", dependencies=[Depends(require_api_token)])
@@ -360,3 +362,36 @@ async def connector_status() -> dict[str, object]:
             "storage": "local SQLite; compact task summaries only",
         },
     }
+
+
+@app.get("/tools/catalog", dependencies=[Depends(require_api_token)])
+async def tools_catalog(kind: str | None = None, no_key_only: bool = False) -> dict[str, object]:
+    result = list_tool_catalog(kind=kind, no_key_only=no_key_only)
+    if "error" in result:
+        raise HTTPException(status_code=422, detail=result["error"])
+    return result
+
+
+@app.get("/tools/catalog/search", dependencies=[Depends(require_api_token)])
+async def tools_catalog_search(q: str, kind: str | None = None) -> dict[str, object]:
+    if kind and kind not in {"builtin", "mcp", "api", "app"}:
+        raise HTTPException(status_code=422, detail="kind must be builtin, mcp, api, or app")
+    return {"query": q, "kind": kind or "all", "matches": search_tool_catalog(q, kind)}
+
+
+
+@app.get("/tools/catalog/sources", dependencies=[Depends(require_api_token)])
+async def tools_catalog_sources() -> dict[str, object]:
+    """List optional upstream MCP/API metadata feeds without fetching them."""
+    return {"sources": list_catalog_sources(), "fetches_external_data": False}
+
+
+@app.get("/tools/catalog/sync", dependencies=[Depends(require_api_token)])
+async def sync_upstream_catalog(source_id: str) -> dict[str, object]:
+    """Explicitly fetch one allowlisted upstream feed as bounded metadata; no code is installed or executed."""
+    try:
+        return await sync_catalog_source(source_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

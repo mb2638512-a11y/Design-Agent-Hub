@@ -1,4 +1,6 @@
-# Design Agent Hub
+# NOVA — Networked Orchestration & Visual Automation
+
+**NOVA** is the name of the Main Manager Agent. The repository/package remains Design Agent Hub for compatibility.
 
 A **frontend-free MCP server** that gives compatible AI agents extra tools for design workflows, coding plans, research, social-platform planning, QA, and delivery. MCP is the primary interface; an optional REST API is also available.
 
@@ -14,6 +16,10 @@ A **frontend-free MCP server** that gives compatible AI agents extra tools for d
 - **Social Media Agent:** plans owned-account setup, content calendars, approved publishing, moderation, and analytics. Live actions require authorized connectors and account-owner approval.
 - **Quality Agent:** returns review gates for correctness, accessibility, privacy, and delivery; does not claim checks actually ran.
 - **Delivery Agent:** prepares a handoff manifest; does not upload, email, publish, or export files itself.
+
+## NOVA app ecosystem: GenOffice + ArtCraft
+
+The `app` catalog lists GenOffice and 13 ArtCraft editors for AI task routing. These remain separate upstream applications; this repository does not bundle or install their source trees. See [`integrations/apps/README.md`](integrations/apps/README.md) for the safe integration plan.
 
 ## Architecture
 
@@ -99,3 +105,28 @@ See [integration guide](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.
 ## License
 
 MIT. Third-party services and APIs remain subject to their own terms.
+
+
+## Separate MCP and API tool hubs
+
+The repository now has two curated integration folders: [MCP references](integrations/mcp/README.md) and [API references](integrations/api/README.md). The catalog is searchable from compatible MCP clients through `list_tool_hubs(kind="mcp" | "api" | "builtin")` and `search_tool_hubs(query, kind)`. The authenticated REST API exposes the same catalog at `GET /tools/catalog?kind=mcp|api|builtin&no_key_only=true` and `GET /tools/catalog/search?q=browser&kind=mcp`.
+
+The current registry contains **12 MCP reference entries**, **12 API/library reference entries**, and **14 built-in capabilities** that do not require a third-party provider API key. The built-ins include manager routing, agent discovery, local design catalog/search, tool recommendations, workflow planning, Figma plugin-spec generation, SVG/HTML starter generation, content drafts, QA checklists, delivery manifests, local ZIP packaging, and opt-in local task memory.
+
+**Important distinction:** the directories are curated references; third-party repositories have not been cloned or installed into this project, and integrations marked `reference_only` are not connected. The existing Canva and Figma adapters are only partially integrated and need credentials, correct scopes, and end-to-end verification. “No external API key” also does not mean “no MCP”: built-ins can be called through this project's REST API without an MCP client, while an MCP-compatible client uses the MCP server. Public third-party APIs still require network access and can impose rate limits.
+
+Run `pytest -q` to verify the catalog tests after installing the development dependencies.
+
+
+## Large catalogs and optional gateway
+
+For large-scale discovery, see [gateway and catalog strategy](integrations/gateway/README.md), [upstream source metadata](integrations/catalog-sources.json), [MCP references](integrations/mcp/README.md), and [API references](integrations/api/README.md). The MCP server exposes `list_upstream_catalog_sources()`; the authenticated REST API exposes `GET /tools/catalog/sources`. These endpoints only list upstream feed URLs; they do not download, clone, install, or execute external code.
+
+Two useful optional upstream directories are the curated MCPHQ JSON catalog and the APIs.guru OpenAPI directory. They are discovery sources, not a list of verified working integrations. The recommended scale strategy is **discover metadata → filter → license/security review → install one connector in isolation → smoke-test → mark verified → expose to the Manager**.
+
+A gateway such as [MetaMCP](https://github.com/metatool-ai/metamcp) or a smaller stdio aggregator can unify selected MCP servers. It is an optional separate service, not automatically deployed by this repository. Do not expose a public gateway without authentication, allowlists, secret isolation, rate limits, and reviewed tool permissions.
+
+
+## NOVA specialist team
+
+NOVA registers **14 lightweight specialist agents**: Design, Coding, Content, Research, Social Media, Quality, Delivery, Office, Image, Vector Design, Video, Audio, Spreadsheet, and PDF. Cross-domain requests use bounded parallel specialist work followed by Quality review and Delivery handoff. The new local-workflow specialists are deterministic and free to run: they return structured plans for local applications without making model/API calls. They do **not** claim to control GenOffice or ArtCraft until a reviewed local CLI/MCP adapter is installed and verified. Their outputs explicitly state this boundary.

@@ -34,9 +34,10 @@ def test_manager_registers_specialists_by_default():
     manager = MainManagerAgent()
     status = manager.status()
     assert status["manager_id"] == "manager"
-    assert status["registered_agent_count"] == 7
+    assert status["registered_agent_count"] == 14
     assert {item["id"] for item in status["agents"]} == {
-        "design", "coding", "content", "research", "social_media", "quality", "delivery"
+        "design", "coding", "content", "research", "social_media", "quality", "delivery",
+        "office", "image", "vector", "video", "audio", "spreadsheet", "pdf"
     }
     assert status["execution_limits"]["agent_timeout_seconds"] > 0
 
@@ -156,3 +157,25 @@ def test_manager_repairs_missing_result_identity_without_claiming_semantic_qa():
     assert repaired["manager_repair"]["applied"] is True
     assert validation["valid"] is True
     assert validation["repair"]["applied"] is True
+
+
+
+@pytest.mark.parametrize(
+    ("task", "agent_id", "app_name"),
+    [
+        ("Edit a DOCX document in GenOffice", "office", "GenOffice"),
+        ("Edit image and remove background", "image", "PhotoCraft"),
+        ("Create an SVG logo with VectorCraft", "vector", "VectorCraft"),
+        ("Edit a video montage in FilmCraft", "video", "FilmCraft"),
+        ("Clean up podcast audio with SoundCraft", "audio", "SoundCraft"),
+        ("Clean this XLSX spreadsheet data", "spreadsheet", "GridCraft"),
+        ("Merge PDF documents with PdfCraft", "pdf", "PdfCraft"),
+    ],
+)
+def test_manager_routes_local_workflows_to_specialists(task, agent_id, app_name):
+    result = asyncio.run(MainManagerAgent().dispatch(task))
+    assert result["status"] == "delegated"
+    assert result["selected_agent"]["id"] == agent_id
+    assert result["result"]["result_type"] == "local_workflow_plan"
+    assert result["result"]["execution_status"] == "plan_only_adapter_not_verified"
+    assert app_name in result["result"]["recommended_apps"]

@@ -15,8 +15,10 @@ from .planner import PlanRequest, create_plan
 from .provider_router import recommend_tools
 from .social_platforms import list_social_platforms
 from .task_memory import clear_memory, recent_tasks
+from .tool_registry import list_catalog_sources, list_tool_catalog, search_tool_catalog
+from .catalog_sync import sync_catalog_source
 
-mcp = FastMCP("design-agent-hub")
+mcp = FastMCP("nova-design-social-agent")
 
 
 @mcp.tool()
@@ -172,3 +174,35 @@ async def canva_get_autofill_job(job_id: str) -> str:
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
+
+
+
+@mcp.tool()
+def list_tool_hubs(kind: str = "") -> str:
+    """List built-in tools and curated MCP/API integration catalogs. kind may be builtin, mcp, api, or app."""
+    return json.dumps(list_tool_catalog(kind.strip().lower() or None), ensure_ascii=False)
+
+
+@mcp.tool()
+def search_tool_hubs(query: str, kind: str = "") -> str:
+    """Search built-in capabilities and curated MCP/API/local-app references by name or purpose."""
+    return json.dumps({"query": query, "kind": kind or "all", "matches": search_tool_catalog(query, kind.strip().lower() or None)}, ensure_ascii=False)
+
+
+
+@mcp.tool()
+def list_upstream_catalog_sources() -> str:
+    """List optional external MCP/API metadata catalogs. This does not fetch, install, or verify third-party tools."""
+    return json.dumps(list_catalog_sources(), ensure_ascii=False)
+
+
+@mcp.tool()
+async def sync_upstream_catalog(source_id: str) -> str:
+    """Explicitly fetch one allowlisted upstream feed as bounded, unverified metadata only; installs nothing."""
+    try:
+        result = await sync_catalog_source(source_id)
+    except ValueError as exc:
+        return json.dumps({"status": "rejected", "message": str(exc)}, ensure_ascii=False)
+    except RuntimeError as exc:
+        return json.dumps({"status": "upstream_unavailable", "message": str(exc)}, ensure_ascii=False)
+    return json.dumps(result, ensure_ascii=False)
