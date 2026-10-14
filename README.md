@@ -125,3 +125,8 @@ For large-scale discovery, see [gateway and catalog strategy](integrations/gatew
 Two useful optional upstream directories are the curated MCPHQ JSON catalog and the APIs.guru OpenAPI directory. They are discovery sources, not a list of verified working integrations. The recommended scale strategy is **discover metadata → filter → license/security review → install one connector in isolation → smoke-test → mark verified → expose to the Manager**.
 
 A gateway such as [MetaMCP](https://github.com/metatool-ai/metamcp) or a smaller stdio aggregator can unify selected MCP servers. It is an optional separate service, not automatically deployed by this repository. Do not expose a public gateway without authentication, allowlists, secret isolation, rate limits, and reviewed tool permissions.
+
+
+## NOVA specialist team
+
+NOVA registers **14 lightweight specialist agents**: Design, Coding, Content, Research, Social Media, Quality, Delivery, Office, Image, Vector Design, Video, Audio, Spreadsheet, and PDF. Cross-domain requests use bounded parallel specialist work followed by Quality review and Delivery handoff. The new local-workflow specialists are deterministic and free to run: they return structured plans for local applications without making model/API calls. They do **not** claim to control GenOffice or ArtCraft until a reviewed local CLI/MCP adapter is installed and verified. Their outputs explicitly state this boundary.
